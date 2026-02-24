@@ -75,20 +75,24 @@ class TestAuth:
         assert r.json()["email"] == CLIENT_EMAIL
 
 
-# Market Insights
+# Market Insights (requires auth)
 class TestMarketInsights:
-    def test_market_insights_public(self):
+    def test_market_insights_requires_auth(self):
         r = requests.get(f"{BASE_URL}/api/market/insights")
+        assert r.status_code == 401
+
+    def test_market_insights_with_auth(self, client_session):
+        r = client_session.get(f"{BASE_URL}/api/market/insights")
         assert r.status_code == 200
         data = r.json()
         assert "energy_prices" in data
         assert "carbon" in data
 
-    def test_market_insights_structure(self):
-        r = requests.get(f"{BASE_URL}/api/market/insights")
+    def test_market_insights_structure(self, client_session):
+        r = client_session.get(f"{BASE_URL}/api/market/insights")
         data = r.json()
-        assert "trend_data" in data
-        assert len(data["trend_data"]) > 0
+        assert "price_history" in data
+        assert len(data["price_history"]) > 0
 
 
 # RFQ Tests
