@@ -21,7 +21,15 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [dropOpen, setDropOpen] = React.useState(false);
+  const [dropOpen, setDropOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    axios.get(`${API}/notifications`, { withCredentials: true })
+      .then(r => setUnreadCount(r.data.unread_count || 0))
+      .catch(() => {});
+  }, [user]);
 
   if (!user) return null;
 
