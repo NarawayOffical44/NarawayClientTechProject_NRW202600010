@@ -138,7 +138,7 @@ class TestVendor:
         assert isinstance(r.json(), list)
 
     def test_vendor_profile_update(self, vendor_session):
-        r = vendor_session.put(f"{BASE_URL}/api/vendor/profile", json={"company_description": "TEST_Green Energy Provider"})
+        r = vendor_session.put(f"{BASE_URL}/api/vendor/profile", json={"company_name": "TEST_Green Sun Energy", "description": "TEST_Green Energy Provider"})
         assert r.status_code == 200
 
 
