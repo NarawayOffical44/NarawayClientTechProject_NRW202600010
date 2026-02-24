@@ -162,7 +162,7 @@ export default function Navbar() {
                     )}
                   </div>
                   {unreadCount > 0 && (
-                    <button onClick={markAllRead} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-sky-400 transition-colors">
+                    <button onClick={markAllRead} data-testid="mark-all-read-btn" className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-sky-400 transition-colors">
                       <CheckCheck size={11} /> Mark all read
                     </button>
                   )}
