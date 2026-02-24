@@ -635,8 +635,7 @@ async def admin_list_rfqs(request: Request):
 
 @api_router.get("/market/insights")
 async def market_insights(request: Request):
-    """Returns simulated real-time energy market data and carbon credit prices"""
-    await get_current_user(request)
+    """Returns simulated real-time energy market data and carbon credit prices (public endpoint)"""
     return {
         "energy_prices": [
             {"type": "Solar", "price": 2.85, "change": 0.05, "change_pct": 1.79, "unit": "₹/kWh", "trend": "up"},
