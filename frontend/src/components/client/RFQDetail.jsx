@@ -164,10 +164,27 @@ export default function RFQDetail() {
 
           {/* Right - Bids */}
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-['Chivo'] font-bold text-lg text-white">
-                Bids ({bids.length})
-              </h2>
+            {bids.length > 1 && (
+              <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 size={14} strokeWidth={1.5} className="text-sky-400" />
+                  <h3 className="text-sm font-semibold text-white">Bid Price Comparison</h3>
+                  {rfq.price_ceiling && <span className="ml-auto text-xs text-amber-400">Ceiling: ₹{rfq.price_ceiling}/kWh</span>}
+                </div>
+                <ResponsiveContainer width="100%" height={120}>
+                  <BarChart data={rankedBids.map(b => ({ name: b.vendor_company?.split(' ')[0] || 'Vendor', price: b.price_per_unit, score: b.ai_score }))} barSize={24}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
+                    <Tooltip contentStyle={{ background: '#0F172A', border: '1px solid #1E293B', borderRadius: '2px', fontSize: 11 }} formatter={(v) => [`₹${v}/kWh`, 'Price']} />
+                    {rfq.price_ceiling && <ReferenceLine y={rfq.price_ceiling} stroke="#F59E0B" strokeDasharray="4 4" label={{ value: 'Ceiling', fill: '#F59E0B', fontSize: 10 }} />}
+                    <Bar dataKey="price" fill="#0EA5E9" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-['Chivo'] font-bold text-lg text-white">Bids ({bids.length})</h2>
               {bids.length > 0 && (
                 <button
                   data-testid="ai-rank-btn"
