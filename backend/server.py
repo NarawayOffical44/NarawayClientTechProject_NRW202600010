@@ -1098,6 +1098,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/docs/prd")
+async def download_prd(format: str = "html"):
+    """Serve the Product Requirements Document for download."""
+    if format == "md":
+        prd_path = "/app/memory/Renergizr_PRD_Complete.md"
+        if not os.path.exists(prd_path):
+            raise HTTPException(status_code=404, detail="PRD not found")
+        with open(prd_path, "r") as f:
+            content = f.read()
+        return Response(
+            content=content,
+            media_type="text/markdown",
+            headers={"Content-Disposition": "attachment; filename=Renergizr_PRD_v1.2.md"}
+        )
+    else:
+        prd_path = "/app/memory/Renergizr_PRD_v1.2.html"
+        if not os.path.exists(prd_path):
+            raise HTTPException(status_code=404, detail="PRD not found")
+        with open(prd_path, "r") as f:
+            content = f.read()
+        return HTMLResponse(content=content)
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     mongo_client.close()
