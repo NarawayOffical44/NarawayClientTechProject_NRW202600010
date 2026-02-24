@@ -268,23 +268,75 @@ export default function VendorProfile() {
 
             <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-6">
               <h3 className="font-['Chivo'] font-bold text-base text-white mb-2">Regulatory Documents</h3>
-              <p className="text-xs text-slate-500 mb-4">Select documents you hold. Upload functionality coming in next release — admin will contact you for physical verification.</p>
-              <div className="flex flex-wrap gap-2 mb-5">
-                {REG_DOCS.map(d => (
-                  <button key={d} type="button" data-testid={`reg-doc-${d.replace(/\s+/g, '-').toLowerCase()}`} onClick={() => toggle('regulatory_docs', d)}
-                    className={`text-xs px-3 py-1.5 rounded-sm border font-medium transition-all duration-200 ${form.regulatory_docs.includes(d) ? 'border-sky-500/40 bg-sky-500/10 text-sky-400' : 'border-[#1E293B] text-slate-400 hover:border-[#334155]'}`}>
-                    {d}
-                  </button>
-                ))}
+              <p className="text-xs text-slate-500 mb-4">Upload compliance documents for admin verification. Accepted: PDF, JPG, PNG · Max 10MB per file.</p>
+
+              {/* Uploaded Documents List */}
+              {uploadedDocs.length > 0 && (
+                <div className="space-y-2 mb-5">
+                  {uploadedDocs.map(doc => (
+                    <div key={doc.doc_id} className="flex items-center justify-between bg-[#1E293B]/50 rounded-sm px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <FileText size={13} className="text-sky-400" />
+                        <div>
+                          <div className="text-xs font-medium text-white">{doc.doc_type}</div>
+                          <div className="text-[10px] text-slate-500">{doc.filename} · {doc.size_bytes ? `${(doc.size_bytes / 1024).toFixed(0)} KB` : ''}</div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-sm">Uploaded</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload New Document */}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-2 block">Document Type</label>
+                  <select
+                    data-testid="doc-type-select"
+                    value={selectedDocType}
+                    onChange={e => setSelectedDocType(e.target.value)}
+                    className="w-full bg-[#020617] border border-[#1E293B] focus:border-sky-500 text-white px-3 py-2.5 rounded-sm text-sm outline-none transition-colors"
+                  >
+                    <option value="">— Select document type —</option>
+                    {REG_DOCS.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+
+                <div
+                  className={`border-2 border-dashed rounded-sm p-5 text-center transition-colors cursor-pointer group ${selectedDocType ? 'border-sky-500/30 hover:border-sky-500/60' : 'border-[#1E293B] opacity-50 cursor-not-allowed'}`}
+                  onClick={() => selectedDocType && fileInputRef.current?.click()}
+                >
+                  {uploadingDoc === selectedDocType ? (
+                    <Loader2 size={24} strokeWidth={1} className="text-sky-400 mx-auto mb-2 animate-spin" />
+                  ) : (
+                    <Upload size={24} strokeWidth={1} className={`mx-auto mb-2 transition-colors ${selectedDocType ? 'text-slate-500 group-hover:text-sky-400' : 'text-slate-700'}`} />
+                  )}
+                  <div className="text-sm text-slate-500 mb-1">
+                    {uploadingDoc ? 'Uploading...' : selectedDocType ? 'Click to upload file' : 'Select a document type first'}
+                  </div>
+                  <div className="text-xs text-slate-600">PDF, JPG, PNG · Max 10MB</div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    data-testid="doc-file-input"
+                  />
+                </div>
               </div>
 
-              {/* Document Upload Placeholder */}
-              <div className="border-2 border-dashed border-[#1E293B] hover:border-sky-500/30 rounded-sm p-6 text-center transition-colors cursor-pointer group">
-                <Upload size={24} strokeWidth={1} className="text-slate-700 group-hover:text-sky-400 mx-auto mb-3 transition-colors" />
-                <div className="text-sm text-slate-500 mb-1">Document Upload</div>
-                <div className="text-xs text-slate-600">PDF, JPG, PNG · Max 10MB per file</div>
-                <div className="text-xs text-amber-400 mt-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-sm inline-block">
-                  Coming Soon — Admin verification via email for now
+              {/* Also show checkbox toggles */}
+              <div className="mt-4 pt-4 border-t border-[#1E293B]">
+                <p className="text-xs text-slate-600 mb-3">Documents claimed (mark all you hold — upload above for verification):</p>
+                <div className="flex flex-wrap gap-2">
+                  {REG_DOCS.map(d => (
+                    <button key={d} type="button" data-testid={`reg-doc-${d.replace(/\s+/g, '-').toLowerCase()}`} onClick={() => toggle('regulatory_docs', d)}
+                      className={`text-xs px-3 py-1.5 rounded-sm border font-medium transition-all duration-200 ${form.regulatory_docs.includes(d) ? 'border-sky-500/40 bg-sky-500/10 text-sky-400' : 'border-[#1E293B] text-slate-400 hover:border-[#334155]'}`}>
+                      {uploadedDocs.find(u => u.doc_type === d) ? '✓ ' : ''}{d}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
