@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Users, FileText, TrendingUp, Shield, CheckCircle, XCircle, Clock, BarChart3 } from 'lucide-react';
+import { Users, FileText, TrendingUp, Shield, CheckCircle, XCircle, Clock, BarChart3, Leaf, Globe } from 'lucide-react';
 import Navbar from '../Navbar';
 import { API } from '../../App';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 const TABS = ['Overview', 'Users', 'Vendors', 'RFQs'];
 
