@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renergizr Industries — Product Requirements Document v1.2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; background: #020617; color: #e2e8f0; line-height: 1.7; font-size: 14px; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px 80px; }
+  .header { background: linear-gradient(135deg, #0F172A 0%, #0c1829 100%); border: 1px solid #1E293B; border-radius: 4px; padding: 40px 48px; margin-bottom: 48px; }
+  .header-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .header-logo-icon { width: 36px; height: 36px; background: #0ea5e9; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  .header-logo span { font-size: 22px; font-weight: 900; letter-spacing: 2px; color: white; }
+  .header-tag { display: inline-block; background: #0ea5e9/10; border: 1px solid rgba(14,165,233,0.2); color: #0ea5e9; padding: 4px 12px; border-radius: 2px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .header h1 { font-size: 28px; font-weight: 900; color: white; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .header p { color: #64748b; font-size: 13px; }
+  .toc { background: #0F172A; border: 1px solid #1E293B; border-radius: 4px; padding: 28px 32px; margin-bottom: 40px; }
+  .toc h2 { font-size: 12px; color: #0ea5e9; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 16px; }
+  .toc ol { padding-left: 24px; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { color: #94a3b8; text-decoration: none; font-size: 13px; } .toc a:hover { color: #0ea5e9; }
+  h1 { font-size: 26px; font-weight: 900; color: white; margin: 48px 0 20px; padding-bottom: 12px; border-bottom: 2px solid #0ea5e9; letter-spacing: -0.3px; }
+  h2 { font-size: 18px; font-weight: 700; color: white; margin: 36px 0 16px; padding-left: 12px; border-left: 3px solid #0ea5e9; }
+  h3 { font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin: 28px 0 12px; }
+  h4 { font-size: 14px; font-weight: 600; color: #e2e8f0; margin: 20px 0 10px; }
+  p { margin-bottom: 14px; color: #cbd5e1; }
+  ul, ol { padding-left: 24px; margin-bottom: 16px; }
+  li { margin-bottom: 6px; color: #cbd5e1; }
+  strong { color: #f1f5f9; font-weight: 700; }
+  em { color: #94a3b8; }
+  code { background: #1E293B; color: #0ea5e9; padding: 2px 8px; border-radius: 3px; font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 12px; }
+  pre { background: #0F172A; border: 1px solid #1E293B; border-radius: 4px; padding: 20px 24px; overflow-x: auto; margin-bottom: 20px; }
+  pre code { background: none; color: #94a3b8; padding: 0; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px; }
+  th { background: #1E293B; color: #0ea5e9; padding: 10px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-bottom: 2px solid #334155; }
+  td { padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #cbd5e1; vertical-align: top; }
+  tr:hover td { background: #0F172A; }
+  blockquote { border-left: 3px solid #0ea5e9; padding-left: 16px; color: #64748b; font-style: italic; margin-bottom: 16px; }
+  hr { border: none; border-top: 1px solid #1E293B; margin: 40px 0; }
+  .footer { text-align: center; color: #334155; font-size: 11px; margin-top: 60px; padding-top: 24px; border-top: 1px solid #1E293B; }
+  @media print { body { background: white; color: black; } .header { background: #f8fafc; } h1,h2,h3,h4,strong { color: black; } td,li,p { color: #374151; } th { color: #1e40af; background: #eff6ff; } code { color: #1e40af; background: #eff6ff; } pre { background: #f8fafc; border: 1px solid #e5e7eb; } pre code { color: #374151; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-logo">
+      <div class="header-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg></div>
+      <span>RENERGIZR INDUSTRIES</span>
+    </div>
+    <div class="header-tag">Confidential</div>
+    <h1>Product Requirements Document</h1>
+    <p>B2B Energy Trading Platform &nbsp;·&nbsp; Version 1.2 &nbsp;·&nbsp; February 2026 &nbsp;·&nbsp; Active Development</p>
+  </div>
+<h1 id="renergizr-industries-private-limited">RENERGIZR INDUSTRIES PRIVATE LIMITED</h1>
+<h2 id="product-requirements-document-prd">Product Requirements Document (PRD)</h2>
+<h3 id="b2b-energy-trading-platform-version-12">B2B Energy Trading Platform — Version 1.2</h3>
+<p><strong>Document Date:</strong> February 2026 | <strong>Status:</strong> Active Development | <strong>Confidential</strong></p>
+<hr />
+<h2 id="table-of-contents">TABLE OF CONTENTS</h2>
+<ol>
+<li><a href="#1-executive-summary">Executive Summary</a></li>
+<li><a href="#2-background--problem-statement">Background &amp; Problem Statement</a></li>
+<li><a href="#3-business-goals--success-metrics">Business Goals &amp; Success Metrics</a></li>
+<li><a href="#4-user-personas">User Personas</a></li>
+<li><a href="#5-platform-architecture">Platform Architecture</a></li>
+<li><a href="#6-feature-specifications">Feature Specifications</a></li>
+<li><a href="#7-trading-workflow--state-machines">Trading Workflow — State Machines</a></li>
+<li><a href="#8-api-reference">API Reference</a></li>
+<li><a href="#9-database-schema">Database Schema</a></li>
+<li><a href="#10-uiux-design-system">UI/UX Design System</a></li>
+<li><a href="#11-notifications--email-system">Notifications &amp; Email System</a></li>
+<li><a href="#12-security--authentication">Security &amp; Authentication</a></li>
+<li><a href="#13-regulatory--compliance-context">Regulatory &amp; Compliance Context</a></li>
+<li><a href="#14-test-credentials--seed-data">Test Credentials &amp; Seed Data</a></li>
+<li><a href="#15-deployment-architecture">Deployment Architecture</a></li>
+<li><a href="#16-roadmap--backlog">Roadmap &amp; Backlog</a></li>
+<li><a href="#17-known-issues--tech-debt">Known Issues &amp; Tech Debt</a></li>
+<li><a href="#18-changelog">Changelog</a></li>
+</ol>
+<hr />
+<h2 id="1-executive-summary">1. EXECUTIVE SUMMARY</h2>
+<p>Renergizr Industries Pvt. Ltd. is building India's first AI-powered B2B energy trading marketplace. The platform enables large industrial energy buyers to publish Requests for Quotation (RFQs), receive competitive bids from CCTS-verified energy vendors, and close deals through a structured, transparent workflow — all within a single digital environment.</p>
+<p>The platform is designed for the Indian energy procurement market, aligned with:
+- <strong>India's Carbon Credit Trading Scheme (CCTS)</strong> under the Energy Conservation (Amendment) Act 2022
+- <strong>MNRE (Ministry of New and Renewable Energy)</strong> procurement guidelines
+- <strong>CEA (Central Electricity Authority)</strong> licensing requirements
+- <strong>EU CBAM (Carbon Border Adjustment Mechanism)</strong> readiness for export-linked industries</p>
+<p><strong>Current Platform Status:</strong> MVP Live — Core trading workflow, AI bid ranking, notification system, contract management, and vendor verification all operational.</p>
+<hr />
+<h2 id="2-background-problem-statement">2. BACKGROUND &amp; PROBLEM STATEMENT</h2>
+<h3 id="21-the-market-gap">2.1 The Market Gap</h3>
+<p>India's renewable energy sector is growing at 34% YoY, with 142+ open RFQs for industrial energy procurement at any given time. Yet the procurement process remains fragmented:</p>
+<ul>
+<li>Large buyers (manufacturing, data centres, real estate) spend 60–90 days on manual vendor discovery</li>
+<li>No central marketplace for verified green energy vendors</li>
+<li>Carbon credit obligations under CCTS (₹20,000 Cr annual market) are tracked in spreadsheets</li>
+<li>EU CBAM compliance (effective 2026) creates new documentation burdens for exporters</li>
+</ul>
+<h3 id="22-our-solution">2.2 Our Solution</h3>
+<p>Renergizr creates a structured digital marketplace where:
+- <strong>Clients</strong> post RFQs specifying energy type, quantity (MW), location, duration, and price ceiling
+- <strong>Vendors</strong> (solar, wind, hydro, thermal, green hydrogen suppliers) submit competitive bids
+- <strong>AI</strong> (Gemini 2.0 Flash) ranks bids on price, fit, timeline, and compliance
+- <strong>Contracts</strong> are digitally created, accepted, and tracked end-to-end
+- <strong>Carbon credits</strong> (CCTS &amp; EU CBAM) are visible, verified, and factored into pricing</p>
+<h3 id="23-company-background">2.3 Company Background</h3>
+<p>Renergizr Industries Private Limited was incorporated with an initial investment of INR 3,80,000. The platform was developed under the terms of a Memorandum of Understanding (MOU) between Renergizr and its technology partner, Emergent Labs.</p>
+<hr />
+<h2 id="3-business-goals-success-metrics">3. BUSINESS GOALS &amp; SUCCESS METRICS</h2>
+<h3 id="31-phase-1-goals-current-mvp">3.1 Phase 1 Goals (Current — MVP)</h3>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Target</th>
+<th>Current Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Platform launch</td>
+<td>Q1 2026</td>
+<td>✅ Deployed</td>
+</tr>
+<tr>
+<td>Vendor onboarding</td>
+<td>25 verified vendors</td>
+<td>2 seeded (demo)</td>
+</tr>
+<tr>
+<td>Client RFQs</td>
+<td>10 live RFQs</td>
+<td>7 in system</td>
+</tr>
+<tr>
+<td>Contracts closed</td>
+<td>5</td>
+<td>2 active</td>
+</tr>
+<tr>
+<td>AI bid ranking accuracy</td>
+<td>&gt;90%</td>
+<td>~94% (simulated)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-phase-2-goals-q2-2026">3.2 Phase 2 Goals (Q2 2026)</h3>
+<ul>
+<li>Payment integration (platform fees + transaction fees via Razorpay/Stripe)</li>
+<li>100+ verified vendors across 5 energy types</li>
+<li>Live carbon credit price feed from CCTS registry</li>
+<li>Mobile app (React Native) for on-the-go bid tracking</li>
+</ul>
+<h3 id="33-key-business-metrics">3.3 Key Business Metrics</h3>
+<ul>
+<li><strong>GMV (Gross Merchandise Value):</strong> Total energy deal value transacted through platform</li>
+<li><strong>Bid Response Time:</strong> Target &lt; 48 hours average (currently modelled at 36h)</li>
+<li><strong>Vendor Verification Rate:</strong> % of registered vendors completing CCTS verification</li>
+<li><strong>Contract Conversion Rate:</strong> % of RFQs that result in signed contracts</li>
+</ul>
+<hr />
+<h2 id="4-user-personas">4. USER PERSONAS</h2>
+<h3 id="41-energy-buyer-client-role">4.1 Energy Buyer (Client Role)</h3>
+<p><strong>Profile:</strong> Head of procurement / energy manager at industrial companies (manufacturing, IT parks, real estate developers, data centres)</p>
+<p><strong>Goals:</strong>
+- Reduce energy procurement cost by 15–25% through competitive bidding
+- Meet green energy targets (RE100, Science Based Targets)
+- Maintain CCTS compliance documentation
+- Simplify vendor due diligence</p>
+<p><strong>Pain Points:</strong>
+- Currently sends RFQs via email; no structured comparison
+- No visibility into vendor CCTS certification status
+- Slow contract execution (60–90 day cycles)</p>
+<p><strong>Platform Actions:</strong>
+- Create multi-step RFQs with technical specifications
+- View, compare, and AI-rank incoming bids
+- Shortlist preferred vendors
+- Award contracts with custom terms
+- Track contract execution status
+- Access carbon market intelligence</p>
+<hr />
+<h3 id="42-energy-vendor-vendor-role">4.2 Energy Vendor (Vendor Role)</h3>
+<p><strong>Profile:</strong> Business development / sales manager at solar/wind/hydro/green-H2 energy companies</p>
+<p><strong>Goals:</strong>
+- Discover and win new enterprise client contracts
+- Showcase CCTS verification and carbon credit portfolio
+- Reduce sales cycle time
+- Transparent bid tracking</p>
+<p><strong>Pain Points:</strong>
+- Currently relies on broker networks and cold outreach
+- No centralised view of open procurement opportunities
+- CCTS verification status not visible to buyers</p>
+<p><strong>Platform Actions:</strong>
+- Browse marketplace of open RFQs with filters
+- Submit detailed bids (price, quantity, timeline, notes)
+- Track bid status (submitted → shortlisted → accepted)
+- Upload compliance documents (CEA License, CERC Registration, etc.)
+- Accept or decline awarded contracts
+- Manage carbon credit portfolio</p>
+<hr />
+<h3 id="43-platform-administrator-admin-role">4.3 Platform Administrator (Admin Role)</h3>
+<p><strong>Profile:</strong> Renergizr operations team member</p>
+<p><strong>Goals:</strong>
+- Maintain platform quality and trust
+- Verify vendor credentials before marketplace access
+- Monitor platform health and growth metrics
+- Resolve disputes</p>
+<p><strong>Platform Actions:</strong>
+- View all users, RFQs, bids, and contracts
+- Verify or reject vendor CCTS certification
+- Activate/deactivate user accounts
+- Access full analytics dashboard
+- Monitor notification system</p>
+<hr />
+<h2 id="5-platform-architecture">5. PLATFORM ARCHITECTURE</h2>
+<h3 id="51-technology-stack">5.1 Technology Stack</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>React 18 + TailwindCSS + Recharts</td>
+<td>Dark industrial theme</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>FastAPI (Python 3.11)</td>
+<td>Async, motor driver</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>MongoDB</td>
+<td>Motor async driver</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>JWT (httponly cookies) + Google OAuth</td>
+<td>7-day sessions</td>
+</tr>
+<tr>
+<td>AI Engine</td>
+<td>Gemini 2.0 Flash</td>
+<td>Via emergentintegrations</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>Resend</td>
+<td>Graceful degradation</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>Kubernetes (Emergent Platform)</td>
+<td>2 replicas, 1Gi RAM</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-file-structure">5.2 File Structure</h3>
+<pre><code>/app/
+├── backend/
+│   ├── server.py              # All API endpoints &amp; business logic (~1000 lines)
+│   ├── requirements.txt       # Python dependencies
+│   └── .env                   # MONGO_URL, DB_NAME, EMERGENT_LLM_KEY, RESEND_API_KEY
+├── frontend/
+│   ├── src/
+│   │   ├── App.js             # Router + AuthContext + ProtectedRoute
+│   │   ├── components/
+│   │   │   ├── Landing.jsx    # Public company website
+│   │   │   ├── Auth.jsx       # Login + Registration
+│   │   │   ├── Navbar.jsx     # Navigation + Notification Bell
+│   │   │   ├── client/
+│   │   │   │   ├── ClientDashboard.jsx
+│   │   │   │   ├── CreateRFQ.jsx
+│   │   │   │   └── RFQDetail.jsx
+│   │   │   ├── vendor/
+│   │   │   │   ├── VendorDashboard.jsx
+│   │   │   │   ├── Marketplace.jsx
+│   │   │   │   ├── VendorProfile.jsx
+│   │   │   │   └── VendorRFQView.jsx
+│   │   │   ├── admin/
+│   │   │   │   └── AdminDashboard.jsx
+│   │   │   └── shared/
+│   │   │       └── ContractsPage.jsx
+│   └── .env                   # REACT_APP_BACKEND_URL
+├── scripts/
+│   └── seed_data.py           # Test data population
+└── memory/
+    └── PRD.md                 # This document (internal)
+</code></pre>
+<h3 id="53-route-map">5.3 Route Map</h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Component</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td>Landing.jsx</td>
+<td>Public</td>
+</tr>
+<tr>
+<td><code>/auth</code></td>
+<td>Auth.jsx</td>
+<td>Public</td>
+</tr>
+<tr>
+<td><code>/client/dashboard</code></td>
+<td>ClientDashboard.jsx</td>
+<td>Client + Admin</td>
+</tr>
+<tr>
+<td><code>/client/rfqs/new</code></td>
+<td>CreateRFQ.jsx</td>
+<td>Client + Admin</td>
+</tr>
+<tr>
+<td><code>/client/rfqs/:id</code></td>
+<td>RFQDetail.jsx</td>
+<td>Client + Admin</td>
+</tr>
+<tr>
+<td><code>/client/contracts</code></td>
+<td>ContractsPage.jsx</td>
+<td>Client + Admin</td>
+</tr>
+<tr>
+<td><code>/vendor/dashboard</code></td>
+<td>VendorDashboard.jsx</td>
+<td>Vendor + Admin</td>
+</tr>
+<tr>
+<td><code>/vendor/marketplace</code></td>
+<td>Marketplace.jsx</td>
+<td>Vendor + Admin</td>
+</tr>
+<tr>
+<td><code>/vendor/profile</code></td>
+<td>VendorProfile.jsx</td>
+<td>Vendor + Admin</td>
+</tr>
+<tr>
+<td><code>/vendor/rfqs/:id</code></td>
+<td>VendorRFQView.jsx</td>
+<td>Vendor + Admin</td>
+</tr>
+<tr>
+<td><code>/vendor/contracts</code></td>
+<td>ContractsPage.jsx</td>
+<td>Vendor + Admin</td>
+</tr>
+<tr>
+<td><code>/admin</code></td>
+<td>AdminDashboard.jsx</td>
+<td>Admin only</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-feature-specifications">6. FEATURE SPECIFICATIONS</h2>
+<h3 id="61-public-landing-page">6.1 Public Landing Page</h3>
+<p><strong>Purpose:</strong> Company website and conversion funnel</p>
+<p><strong>Sections:</strong>
+1. <strong>Market Ticker</strong> — Scrolling live-style ticker: Solar ₹2.85/kWh, Wind ₹3.12/kWh, CCTS Carbon ₹245.50/tCO2e, EU CBAM €68.50/tCO2e
+2. <strong>Hero Section</strong> — "Where India's Energy Deals Get Done." + Live Market Widget with real-time price table + CTA buttons (Post Your First RFQ / Join as Vendor)
+3. <strong>About Renergizr</strong> — Company story, INR 3.8L founding investment, mission statement
+4. <strong>Platform Features Bento Grid</strong> — 6 cards: RFQ System, AI Bid Ranking, Vendor Verification, Carbon Credits (CCTS), Market Intelligence, CBAM Compliance
+5. <strong>How It Works</strong> — 3-step visual: Post RFQ → Receive Bids → Close Deal
+6. <strong>Carbon &amp; CCTS Section</strong> — India's ₹20,000 Cr CCTS market, EU CBAM explainer
+7. <strong>For Clients / For Vendors</strong> — Role-specific benefit sections
+8. <strong>News &amp; Insights</strong> — Linked articles from Finshots, LiveMint on Indian energy market
+9. <strong>Compliance Badges</strong> — CCTS, MNRE, CEA, CBAM, ISO 14001, GreenPro
+10. <strong>Contact Form</strong> — Lead capture form
+11. <strong>Footer</strong> — Navigation, social links, legal</p>
+<hr />
+<h3 id="62-authentication-module">6.2 Authentication Module</h3>
+<p><strong>Registration Flow:</strong>
+- Email + Password + Name + Role (Client / Vendor) + Company Name
+- Password: bcrypt hashed (10 rounds)
+- On vendor registration: auto-creates <code>vendor_profiles</code> document with <code>verification_status: "pending"</code>
+- Returns session token (7-day expiry) + sets httponly cookie</p>
+<p><strong>Login Flow:</strong>
+- Email + Password → JWT session token
+- Cookie: <code>session_token</code>, httponly, secure, samesite=none
+- Also accepts <code>Authorization: Bearer &lt;token&gt;</code> header</p>
+<p><strong>Google OAuth Flow:</strong>
+- Emergent-managed Google OAuth
+- Redirects to Google → callback with <code>#session_id=xxx</code> hash fragment
+- Frontend exchanges session_id for user data via <code>/api/auth/google/session</code>
+- Role selection preserved in <code>localStorage</code> during OAuth flow</p>
+<p><strong>Session Management:</strong>
+- 7-day session expiry stored in <code>user_sessions</code> collection
+- Sessions invalidated on logout
+- <code>/api/auth/me</code> validates current session on app load</p>
+<hr />
+<h3 id="63-client-module-detailed-specs">6.3 Client Module — Detailed Specs</h3>
+<h4 id="631-client-dashboard">6.3.1 Client Dashboard</h4>
+<ul>
+<li><strong>Stats Cards:</strong> Total RFQs, Active (Open) RFQs, Bids Received, Contracts Awarded</li>
+<li><strong>Energy Price Chart:</strong> 6-month price history (Solar, Wind) — Recharts line chart</li>
+<li><strong>Carbon Market Widget:</strong> CCTS price + EU CBAM price + trend indicators</li>
+<li><strong>Recent RFQs Table:</strong> Last 5 RFQs with status badges and quick-link to detail</li>
+</ul>
+<h4 id="632-rfq-creation-4-step-wizard">6.3.2 RFQ Creation — 4-Step Wizard</h4>
+<p><strong>Step 1 — Basic Info:</strong>
+- Title (required)
+- Description
+- Energy Type: Solar / Wind / Hydro / Thermal / Green Hydrogen
+- Quantity (MW, required)
+- Delivery Location (required)
+- Start Date / End Date</p>
+<p><strong>Step 2 — Technical Specs:</strong>
+- Voltage (kV)
+- Phase (Single/Three)
+- Frequency (Hz)
+- Metering Type
+- Load Factor (%)
+- Grid Connection Type</p>
+<p><strong>Step 3 — Logistics &amp; Add-ons:</strong>
+- Transmission Requirements
+- Required Add-on Services (multi-select): Grid Integration Support, O&amp;M Services, Carbon Credit Certificate, CERC/SERC Filing Support, RE Certificates (RECs), SCADA Integration, Insurance Coverage</p>
+<p><strong>Step 4 — Financial Terms:</strong>
+- Price Ceiling (₹/kWh, optional — visible to vendors as reference)
+- Payment Terms: Advance / Monthly / Quarterly / Annual / Milestone-based
+- Contract Duration
+- Penalty Clauses
+- Escalation Clause</p>
+<p><strong>On Submit:</strong> RFQ created with <code>status: "open"</code>, <code>bid_count: 0</code></p>
+<h4 id="633-rfq-detail-page">6.3.3 RFQ Detail Page</h4>
+<ul>
+<li><strong>Status Badge + Workflow Steps:</strong> Visual 4-step progress (Bids Open → Bidding Closed → Contract Awarded → Completed)</li>
+<li><strong>Close Bidding Button:</strong> Transitions RFQ to <code>bidding_closed</code>; notifies all bidding vendors</li>
+<li><strong>Bid Price Comparison Chart:</strong> Bar chart comparing all bid prices vs ceiling</li>
+<li><strong>AI Ranking Button:</strong> Calls Gemini Flash for scores (0–100), strengths, gaps, recommendation</li>
+<li><strong>Bid Cards:</strong> Expandable per-vendor bid cards showing:</li>
+<li>Vendor company + CCTS verified badge</li>
+<li>Price per kWh + Quantity</li>
+<li>AI score bar (color-coded: green ≥80, amber ≥60, red &lt;60)</li>
+<li>Expand: timeline, notes, AI strengths/gaps/recommendation</li>
+<li>Actions: Shortlist (toggle) / Award Contract</li>
+<li><strong>Award Contract Modal:</strong> Custom contract terms + payment schedule → creates contract, auto-rejects other bids</li>
+<li><strong>Contract Banner:</strong> Shows awarded contract status (pending/active/declined) with link to Contracts page</li>
+<li><strong>AI Summary Panel:</strong> Gemini's overall market analysis summary</li>
+</ul>
+<h4 id="634-contracts-page-client">6.3.4 Contracts Page (Client)</h4>
+<ul>
+<li><strong>Stats Row:</strong> Total / Active / Pending / Declined counts</li>
+<li><strong>Contract Cards:</strong> Per contract showing vendor, energy type, price, quantity</li>
+<li><strong>Expandable Details:</strong> Full contract terms, delivery timeline, location, dates, payment schedule, estimated annual value (₹L), vendor notes</li>
+<li><strong>View RFQ Link:</strong> Navigate back to the source RFQ</li>
+</ul>
+<hr />
+<h3 id="64-vendor-module-detailed-specs">6.4 Vendor Module — Detailed Specs</h3>
+<h4 id="641-vendor-dashboard">6.4.1 Vendor Dashboard</h4>
+<ul>
+<li><strong>Profile Completion Tracker:</strong> % progress bar based on filled fields</li>
+<li><strong>Stats Cards:</strong> Active Bids, Bids Won, Carbon Credits (tCO2e)</li>
+<li><strong>Carbon Credits Widget:</strong> Balance (tCO2e) + Market Value at CCTS rate (₹245.50/tCO2e) + EU CBAM value</li>
+<li><strong>CCTS Carbon Price Chart:</strong> 6-month trend</li>
+<li><strong>My Recent Bids:</strong> Status table of last bids</li>
+</ul>
+<h4 id="642-marketplace">6.4.2 Marketplace</h4>
+<ul>
+<li><strong>RFQ Grid:</strong> All open RFQs with energy type tag, quantity, location, deadline</li>
+<li><strong>Search &amp; Filters:</strong> By energy type (Solar / Wind / Hydro / Thermal / Green H2)</li>
+<li><strong>RFQ Card:</strong> Title, client company, quantity (MW), location, bid count, "Bid Now" button</li>
+<li><strong>Sorting:</strong> By newest, quantity, bid count</li>
+</ul>
+<h4 id="643-vendor-profile-3-tabs">6.4.3 Vendor Profile — 3 Tabs</h4>
+<p><strong>Tab 1 — Company Info:</strong>
+- Company Name, Description, Location, Website
+- Contact Email, Contact Phone</p>
+<p><strong>Tab 2 — Energy &amp; Capacity:</strong>
+- Energy Types (multi-select toggles): Solar, Wind, Hydro, Thermal, Green Hydrogen
+- Total Installed Capacity (MW)
+- Carbon Credits Balance (tCO2e) + real-time portfolio value calculator</p>
+<p><strong>Tab 3 — Compliance &amp; Docs:</strong>
+- <strong>Green Certifications</strong> (multi-select): MNRE Approved, ISO 14001, ISO 50001, BEE 5-Star, GreenPro, IGBC, Carbon Neutral Certified
+- <strong>Regulatory Documents Upload:</strong>
+  - Document types: CEA License, CERC Registration, SECI PPA, DISCOM Agreement, MNRE Registration, GST Certificate, Company Incorporation
+  - File upload: PDF, JPG, PNG up to 10MB
+  - Select doc type → click to upload → base64 stored in MongoDB
+  - Uploaded docs list shows filename, size, "Uploaded" status badge
+- <strong>Verification Status Badge:</strong> Pending / CCTS Verified / Not Verified</p>
+<h4 id="644-rfq-detail-vendor-view">6.4.4 RFQ Detail (Vendor View)</h4>
+<ul>
+<li><strong>RFQ Requirements Panel:</strong> All specs from the client's RFQ</li>
+<li><strong>Bid Form (if not yet bid):</strong></li>
+<li>Price per kWh (INR) — shows client's ceiling as reference</li>
+<li>Quantity (MW) — pre-filled with RFQ requirement</li>
+<li>Delivery Timeline — text (e.g., "Ready in 3 months from LOI")</li>
+<li>Additional Notes — certifications, warranties, etc.</li>
+<li><strong>Bid Status Card (if bid submitted):</strong></li>
+<li>submitted / shortlisted / accepted / rejected</li>
+<li>Shows price, quantity, timeline</li>
+<li>Shortlisted state: amber card + "Client is reviewing final bids" message</li>
+<li><strong>Contract Offer Panel (if contract awarded):</strong></li>
+<li>Shows full contract terms</li>
+<li>Payment schedule</li>
+<li>Accept Contract / Decline buttons</li>
+<li>Decline: textarea for reason</li>
+<li>48-hour acceptance window indicator</li>
+</ul>
+<h4 id="645-contracts-page-vendor">6.4.5 Contracts Page (Vendor)</h4>
+<ul>
+<li>Same as client contracts page but from vendor perspective</li>
+<li>Shows client company name, contract terms, estimated annual value</li>
+<li>"View RFQ" link for each contract</li>
+</ul>
+<hr />
+<h3 id="65-admin-module-detailed-specs">6.5 Admin Module — Detailed Specs</h3>
+<h4 id="651-overview-tab">6.5.1 Overview Tab</h4>
+<ul>
+<li><strong>Stats Row:</strong> Total Users, Clients, Vendors, RFQs, Bids, Active Contracts, Pending Verifications</li>
+<li><strong>Platform Activity Chart:</strong> Bar chart by category</li>
+<li><strong>Energy Price Charts:</strong> Solar + Wind 6-month trends</li>
+<li><strong>CCTS Carbon Chart:</strong> 6-month price trend</li>
+</ul>
+<h4 id="652-users-tab">6.5.2 Users Tab</h4>
+<ul>
+<li>Full user table: Name, Email, Role, Company, Joined Date, Status</li>
+<li><strong>Actions per user:</strong> Change role (client/vendor/admin), Activate/Deactivate account</li>
+</ul>
+<h4 id="653-vendors-tab">6.5.3 Vendors Tab</h4>
+<ul>
+<li>Vendor table with verification status: Pending / Verified / Rejected</li>
+<li><strong>Verify Button:</strong> Sets <code>verification_status: "verified"</code> → notifies vendor + sends email</li>
+<li><strong>Reject Button:</strong> Sets <code>verification_status: "rejected"</code> → notifies vendor</li>
+</ul>
+<h4 id="654-rfqs-tab">6.5.4 RFQs Tab</h4>
+<ul>
+<li>All platform RFQs with status</li>
+<li>Client company, energy type, quantity, bid count, status</li>
+<li>Direct link to RFQ details</li>
+</ul>
+<hr />
+<h2 id="7-trading-workflow-state-machines">7. TRADING WORKFLOW — STATE MACHINES</h2>
+<h3 id="71-rfq-lifecycle">7.1 RFQ Lifecycle</h3>
+<pre><code>[DRAFT] → not implemented in UI yet
+    ↓
+[OPEN] ← RFQ created; vendors can bid
+    ↓  (client clicks &quot;Close Bidding&quot;)
+[BIDDING_CLOSED] ← no new bids; client reviews
+    ↓  (client clicks &quot;Award Contract&quot; on a bid)
+[AWARDED] ← contract created; vendor notified
+    ↓  (vendor accepts; contract becomes active)
+[COMPLETED] ← manual transition when energy delivery done
+    ↓ OR
+[CANCELLED] ← client cancels (from OPEN only)
+</code></pre>
+<h3 id="72-bid-lifecycle">7.2 Bid Lifecycle</h3>
+<pre><code>[SUBMITTED] ← vendor submits bid on open RFQ
+    ↓  (client clicks &quot;Shortlist&quot; — toggle)
+[SHORTLISTED] ← shortlisted for final review
+    ↓  (client awards contract to this bid)
+[ACCEPTED] ← contract created for this bid
+    │                    ↓  (vendor accepts)
+    │           [CONTRACT_SIGNED] ← contract active
+    │                    ↓  (vendor declines)
+    │           [CONTRACT_DECLINED] ← client must award again
+    ↓  (another bid is accepted / client rejects)
+[REJECTED] ← not selected; vendor notified
+</code></pre>
+<h3 id="73-contract-lifecycle">7.3 Contract Lifecycle</h3>
+<pre><code>[PENDING_VENDOR_ACCEPTANCE] ← contract created by client; vendor notified
+    ↓  (vendor clicks &quot;Accept Contract&quot;)
+[ACTIVE] ← energy delivery in progress; client notified
+    ↓  (manual completion)
+[COMPLETED] ← deal closed
+    OR
+    ↓  (vendor clicks &quot;Decline&quot;)
+[VENDOR_DECLINED] ← client notified; must award to another vendor
+</code></pre>
+<h3 id="74-notification-triggers">7.4 Notification Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>Event</th>
+<th>Triggered By</th>
+<th>Notifies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New bid submitted</td>
+<td>Vendor</td>
+<td>Client (RFQ owner)</td>
+</tr>
+<tr>
+<td>Bidding closed</td>
+<td>Client</td>
+<td>All vendors who bid</td>
+</tr>
+<tr>
+<td>Bid shortlisted</td>
+<td>Client</td>
+<td>Vendor (bid owner)</td>
+</tr>
+<tr>
+<td>Contract awarded</td>
+<td>Client</td>
+<td>Winning vendor + All rejected vendors</td>
+</tr>
+<tr>
+<td>Contract accepted</td>
+<td>Vendor</td>
+<td>Client</td>
+</tr>
+<tr>
+<td>Contract declined</td>
+<td>Vendor</td>
+<td>Client</td>
+</tr>
+<tr>
+<td>Vendor verified</td>
+<td>Admin</td>
+<td>Vendor</td>
+</tr>
+<tr>
+<td>Vendor rejected</td>
+<td>Admin</td>
+<td>Vendor</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-api-reference">8. API REFERENCE</h2>
+<p><strong>Base URL:</strong> <code>https://{app_name}.preview.emergentagent.com/api</code></p>
+<p>All authenticated endpoints require:
+- <code>Authorization: Bearer &lt;session_token&gt;</code> header, OR
+- <code>session_token</code> httponly cookie</p>
+<hr />
+<h3 id="81-authentication">8.1 Authentication</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/auth/register</code></td>
+<td>None</td>
+<td>Register new user</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/login</code></td>
+<td>None</td>
+<td>Login, returns session_token</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/google/session</code></td>
+<td>None</td>
+<td>Exchange Google OAuth session_id</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/auth/me</code></td>
+<td>Required</td>
+<td>Get current user</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/auth/logout</code></td>
+<td>Required</td>
+<td>Invalidate session</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Register Request:</strong></p>
+<pre><code class="language-json">{
+  &quot;email&quot;: &quot;user@company.com&quot;,
+  &quot;password&quot;: &quot;SecurePass@123&quot;,
+  &quot;name&quot;: &quot;John Doe&quot;,
+  &quot;role&quot;: &quot;client&quot;,
+  &quot;company&quot;: &quot;Acme Corp&quot;
+}
+</code></pre>
+<p><strong>Login Response:</strong></p>
+<pre><code class="language-json">{
+  &quot;user&quot;: {&quot;user_id&quot;: &quot;usr_abc123&quot;, &quot;email&quot;: &quot;...&quot;, &quot;name&quot;: &quot;...&quot;, &quot;role&quot;: &quot;client&quot;},
+  &quot;session_token&quot;: &quot;sess_xyz789&quot;
+}
+</code></pre>
+<hr />
+<h3 id="82-rfq-endpoints">8.2 RFQ Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Role</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/rfqs</code></td>
+<td>Required</td>
+<td>Client</td>
+<td>Create RFQ</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/rfqs</code></td>
+<td>Required</td>
+<td>All</td>
+<td>List RFQs (filtered by role)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/rfqs/{rfq_id}</code></td>
+<td>Required</td>
+<td>All</td>
+<td>Get RFQ detail</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/rfqs/{rfq_id}/status</code></td>
+<td>Required</td>
+<td>Client/Admin</td>
+<td>Update status</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/rfqs/{rfq_id}/close-bidding</code></td>
+<td>Required</td>
+<td>Client/Admin</td>
+<td>Close bidding</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/rfqs/{rfq_id}/award/{bid_id}</code></td>
+<td>Required</td>
+<td>Client/Admin</td>
+<td>Award contract</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Close Bidding Response:</strong></p>
+<pre><code class="language-json">{&quot;message&quot;: &quot;Bidding closed&quot;, &quot;status&quot;: &quot;bidding_closed&quot;}
+</code></pre>
+<p><strong>Award Contract Request:</strong></p>
+<pre><code class="language-json">{
+  &quot;contract_terms&quot;: &quot;Standard RERC/CERC terms apply...&quot;,
+  &quot;delivery_milestones&quot;: [&quot;Plant commissioning within 90 days&quot;, &quot;Full capacity by Day 120&quot;],
+  &quot;payment_schedule&quot;: &quot;Net 30 days from invoice date&quot;
+}
+</code></pre>
+<hr />
+<h3 id="83-bid-endpoints">8.3 Bid Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Role</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/rfqs/{rfq_id}/bids</code></td>
+<td>Required</td>
+<td>Vendor</td>
+<td>Submit bid</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/rfqs/{rfq_id}/bids</code></td>
+<td>Required</td>
+<td>Client/Admin</td>
+<td>Get all bids for RFQ</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/rfqs/{rfq_id}/bids/ai-rank</code></td>
+<td>Required</td>
+<td>Client/Admin</td>
+<td>AI rank all bids</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/rfqs/{rfq_id}/bids/{bid_id}/shortlist</code></td>
+<td>Required</td>
+<td>Client/Admin</td>
+<td>Toggle shortlist</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/rfqs/{rfq_id}/bids/{bid_id}/status</code></td>
+<td>Required</td>
+<td>Client/Admin</td>
+<td>Update bid status</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Submit Bid Request:</strong></p>
+<pre><code class="language-json">{
+  &quot;price_per_unit&quot;: 2.85,
+  &quot;quantity_mw&quot;: 100,
+  &quot;delivery_timeline&quot;: &quot;Ready in 3 months from LOI&quot;,
+  &quot;notes&quot;: &quot;Tier 1 solar panels, 25 year warranty, ISO 14001 certified&quot;
+}
+</code></pre>
+<p><strong>AI Rank Response:</strong></p>
+<pre><code class="language-json">{
+  &quot;rankings&quot;: [
+    {
+      &quot;bid_id&quot;: &quot;bid_abc123&quot;,
+      &quot;score&quot;: 87,
+      &quot;strengths&quot;: [&quot;Competitive pricing below ceiling&quot;, &quot;Full quantity coverage&quot;, &quot;Verified CCTS status&quot;],
+      &quot;gaps&quot;: [&quot;Delivery timeline slightly longer than ideal&quot;],
+      &quot;recommendation&quot;: &quot;Strong candidate — best price-to-compliance ratio&quot;
+    }
+  ],
+  &quot;summary&quot;: &quot;3 competitive bids received. GreenSun Energy leads on pricing while WindPower offers faster delivery...&quot;,
+  &quot;best_bid_id&quot;: &quot;bid_abc123&quot;
+}
+</code></pre>
+<hr />
+<h3 id="84-contract-endpoints">8.4 Contract Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Role</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/contracts</code></td>
+<td>Required</td>
+<td>All</td>
+<td>List user's contracts</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/contracts/{contract_id}</code></td>
+<td>Required</td>
+<td>Client/Vendor</td>
+<td>Get contract detail</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/contracts/{contract_id}/respond</code></td>
+<td>Required</td>
+<td>Vendor</td>
+<td>Accept or decline contract</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Respond Request:</strong></p>
+<pre><code class="language-json">{
+  &quot;accept&quot;: true,
+  &quot;notes&quot;: &quot;We confirm delivery as per agreed terms&quot;
+}
+</code></pre>
+<hr />
+<h3 id="85-vendor-endpoints">8.5 Vendor Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Role</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/vendor/profile</code></td>
+<td>Required</td>
+<td>Vendor</td>
+<td>Get vendor profile</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/vendor/profile</code></td>
+<td>Required</td>
+<td>Vendor</td>
+<td>Update vendor profile</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/vendor/bids</code></td>
+<td>Required</td>
+<td>Vendor</td>
+<td>Get all my bids</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/vendor/documents/upload</code></td>
+<td>Required</td>
+<td>Vendor</td>
+<td>Upload document</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/vendor/documents</code></td>
+<td>Required</td>
+<td>Vendor</td>
+<td>List my documents</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Document Upload Request:</strong></p>
+<pre><code class="language-json">{
+  &quot;doc_type&quot;: &quot;CEA License&quot;,
+  &quot;filename&quot;: &quot;cea_license_2026.pdf&quot;,
+  &quot;data_base64&quot;: &quot;&lt;base64 encoded file content&gt;&quot;,
+  &quot;size_bytes&quot;: 204800
+}
+</code></pre>
+<hr />
+<h3 id="86-notification-endpoints">8.6 Notification Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Role</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/notifications</code></td>
+<td>Required</td>
+<td>All</td>
+<td>Get notifications + unread count</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/notifications/{notif_id}/read</code></td>
+<td>Required</td>
+<td>All</td>
+<td>Mark single as read</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/notifications/read-all</code></td>
+<td>Required</td>
+<td>All</td>
+<td>Mark all as read</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notifications Response:</strong></p>
+<pre><code class="language-json">{
+  &quot;notifications&quot;: [
+    {
+      &quot;notif_id&quot;: &quot;notif_abc123&quot;,
+      &quot;type&quot;: &quot;contract_awarded&quot;,
+      &quot;title&quot;: &quot;Contract Awarded to You!&quot;,
+      &quot;message&quot;: &quot;You have been awarded the contract for 'Solar Power Supply - 100 MW Rajasthan'.&quot;,
+      &quot;link&quot;: &quot;/vendor/rfqs/rfq_abc123&quot;,
+      &quot;read&quot;: false,
+      &quot;created_at&quot;: &quot;2026-02-24T10:30:00Z&quot;
+    }
+  ],
+  &quot;unread_count&quot;: 3
+}
+</code></pre>
+<hr />
+<h3 id="87-admin-endpoints">8.7 Admin Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Role</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/admin/users</code></td>
+<td>Required</td>
+<td>Admin</td>
+<td>All users</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/admin/users/{user_id}</code></td>
+<td>Required</td>
+<td>Admin</td>
+<td>Update user (role, verification, active)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/vendors</code></td>
+<td>Required</td>
+<td>Admin</td>
+<td>All vendors with user info</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/analytics</code></td>
+<td>Required</td>
+<td>Admin</td>
+<td>Platform statistics</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/rfqs</code></td>
+<td>Required</td>
+<td>Admin</td>
+<td>All RFQs</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/admin/contracts</code></td>
+<td>Required</td>
+<td>Admin</td>
+<td>All contracts</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Admin Analytics Response:</strong></p>
+<pre><code class="language-json">{
+  &quot;total_users&quot;: 7,
+  &quot;total_clients&quot;: 4,
+  &quot;total_vendors&quot;: 2,
+  &quot;total_rfqs&quot;: 7,
+  &quot;open_rfqs&quot;: 4,
+  &quot;awarded_rfqs&quot;: 2,
+  &quot;total_bids&quot;: 2,
+  &quot;total_contracts&quot;: 2,
+  &quot;active_contracts&quot;: 2,
+  &quot;pending_vendors&quot;: 1,
+  &quot;verified_vendors&quot;: 1
+}
+</code></pre>
+<hr />
+<h3 id="88-market-insights-public">8.8 Market Insights (Public)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Auth</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/market/insights</code></td>
+<td>None</td>
+<td>Simulated energy + carbon market data</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-database-schema">9. DATABASE SCHEMA</h2>
+<p><strong>Database:</strong> MongoDB | <strong>DB Name:</strong> <code>test_database</code> (configurable via <code>DB_NAME</code> env)</p>
+<hr />
+<h3 id="91-users-collection">9.1 <code>users</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;user_id&quot;: &quot;usr_abc123def456&quot;,
+  &quot;email&quot;: &quot;user@company.com&quot;,
+  &quot;name&quot;: &quot;John Doe&quot;,
+  &quot;role&quot;: &quot;client | vendor | admin&quot;,
+  &quot;company&quot;: &quot;Acme Corp&quot;,
+  &quot;picture&quot;: &quot;https://...&quot;,
+  &quot;password_hash&quot;: &quot;$2b$10$...&quot;,
+  &quot;is_active&quot;: true,
+  &quot;created_at&quot;: &quot;2026-01-15T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="92-user_sessions-collection">9.2 <code>user_sessions</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;session_token&quot;: &quot;sess_abc123&quot;,
+  &quot;user_id&quot;: &quot;usr_abc123&quot;,
+  &quot;expires_at&quot;: &quot;2026-02-22T10:00:00Z&quot;,
+  &quot;created_at&quot;: &quot;2026-02-15T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="93-vendor_profiles-collection">9.3 <code>vendor_profiles</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;vendor_id&quot;: &quot;vnd_abc123&quot;,
+  &quot;user_id&quot;: &quot;usr_abc123&quot;,
+  &quot;company_name&quot;: &quot;GreenSun Energy Pvt Ltd&quot;,
+  &quot;description&quot;: &quot;Leading solar EPC company with 500MW installed capacity&quot;,
+  &quot;energy_types&quot;: [&quot;solar&quot;, &quot;green_hydrogen&quot;],
+  &quot;capacity_mw&quot;: 500,
+  &quot;certifications&quot;: [&quot;MNRE Approved&quot;, &quot;ISO 14001&quot;],
+  &quot;regulatory_docs&quot;: [&quot;CEA License&quot;, &quot;MNRE Registration&quot;],
+  &quot;carbon_credits&quot;: 12500,
+  &quot;verification_status&quot;: &quot;pending | verified | rejected&quot;,
+  &quot;contact_email&quot;: &quot;bd@greensun.com&quot;,
+  &quot;contact_phone&quot;: &quot;+91 98765 43210&quot;,
+  &quot;website&quot;: &quot;https://greensun.com&quot;,
+  &quot;location&quot;: &quot;Jaipur, Rajasthan&quot;,
+  &quot;created_at&quot;: &quot;2026-01-15T10:00:00Z&quot;,
+  &quot;updated_at&quot;: &quot;2026-02-15T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="94-rfqs-collection">9.4 <code>rfqs</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;rfq_id&quot;: &quot;rfq_abc123&quot;,
+  &quot;client_id&quot;: &quot;usr_abc123&quot;,
+  &quot;client_name&quot;: &quot;Rajesh Kumar&quot;,
+  &quot;client_company&quot;: &quot;Acme Manufacturing&quot;,
+  &quot;title&quot;: &quot;Solar Power Supply - 100 MW Rajasthan&quot;,
+  &quot;description&quot;: &quot;Seeking reliable solar energy supplier...&quot;,
+  &quot;energy_type&quot;: &quot;solar | wind | hydro | thermal | green_hydrogen&quot;,
+  &quot;quantity_mw&quot;: 100,
+  &quot;delivery_location&quot;: &quot;Jodhpur, Rajasthan&quot;,
+  &quot;start_date&quot;: &quot;2026-04-01&quot;,
+  &quot;end_date&quot;: &quot;2031-03-31&quot;,
+  &quot;price_ceiling&quot;: 3.20,
+  &quot;specs&quot;: {&quot;voltage_kv&quot;: 33, &quot;phase&quot;: &quot;three&quot;, &quot;frequency_hz&quot;: 50},
+  &quot;logistics&quot;: {&quot;transmission_requirements&quot;: &quot;Direct injection&quot;},
+  &quot;financial_terms&quot;: {&quot;payment_terms&quot;: &quot;monthly&quot;, &quot;contract_duration&quot;: &quot;5 years&quot;},
+  &quot;add_on_services&quot;: [&quot;Carbon Credit Certificate&quot;, &quot;Grid Integration Support&quot;],
+  &quot;status&quot;: &quot;open | bidding_closed | awarded | completed | cancelled&quot;,
+  &quot;bid_count&quot;: 3,
+  &quot;ai_analysis_summary&quot;: &quot;3 competitive bids received...&quot;,
+  &quot;best_bid_id&quot;: &quot;bid_abc123&quot;,
+  &quot;awarded_bid_id&quot;: &quot;bid_abc123&quot;,
+  &quot;contract_id&quot;: &quot;con_abc123&quot;,
+  &quot;created_at&quot;: &quot;2026-02-01T10:00:00Z&quot;,
+  &quot;updated_at&quot;: &quot;2026-02-15T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="95-bids-collection">9.5 <code>bids</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;bid_id&quot;: &quot;bid_abc123&quot;,
+  &quot;rfq_id&quot;: &quot;rfq_abc123&quot;,
+  &quot;vendor_id&quot;: &quot;usr_vendor123&quot;,
+  &quot;vendor_name&quot;: &quot;Suresh Sharma&quot;,
+  &quot;vendor_company&quot;: &quot;GreenSun Energy Pvt Ltd&quot;,
+  &quot;vendor_location&quot;: &quot;Jaipur, Rajasthan&quot;,
+  &quot;vendor_verification&quot;: &quot;pending | verified&quot;,
+  &quot;price_per_unit&quot;: 2.85,
+  &quot;quantity_mw&quot;: 100,
+  &quot;delivery_timeline&quot;: &quot;Ready in 3 months from LOI&quot;,
+  &quot;specs&quot;: {},
+  &quot;notes&quot;: &quot;Tier 1 panels, 25yr warranty, ISO 14001&quot;,
+  &quot;ai_score&quot;: 87,
+  &quot;ai_analysis&quot;: {
+    &quot;strengths&quot;: [&quot;Competitive price&quot;, &quot;Full coverage&quot;],
+    &quot;gaps&quot;: [&quot;Timeline slightly long&quot;],
+    &quot;recommendation&quot;: &quot;Strong candidate&quot;
+  },
+  &quot;status&quot;: &quot;submitted | shortlisted | accepted | rejected | contract_signed | contract_declined&quot;,
+  &quot;contract_id&quot;: &quot;con_abc123&quot;,
+  &quot;created_at&quot;: &quot;2026-02-10T10:00:00Z&quot;
+}
+</code></pre>
+<h3 id="96-contracts-collection">9.6 <code>contracts</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;contract_id&quot;: &quot;con_abc123&quot;,
+  &quot;rfq_id&quot;: &quot;rfq_abc123&quot;,
+  &quot;rfq_title&quot;: &quot;Solar Power Supply - 100 MW Rajasthan&quot;,
+  &quot;bid_id&quot;: &quot;bid_abc123&quot;,
+  &quot;client_id&quot;: &quot;usr_client123&quot;,
+  &quot;client_name&quot;: &quot;Rajesh Kumar&quot;,
+  &quot;client_company&quot;: &quot;Acme Manufacturing&quot;,
+  &quot;vendor_id&quot;: &quot;usr_vendor123&quot;,
+  &quot;vendor_name&quot;: &quot;Suresh Sharma&quot;,
+  &quot;vendor_company&quot;: &quot;GreenSun Energy Pvt Ltd&quot;,
+  &quot;energy_type&quot;: &quot;solar&quot;,
+  &quot;quantity_mw&quot;: 100,
+  &quot;price_per_unit&quot;: 2.85,
+  &quot;estimated_annual_value_inr&quot;: 31185000,
+  &quot;delivery_location&quot;: &quot;Jodhpur, Rajasthan&quot;,
+  &quot;start_date&quot;: &quot;2026-04-01&quot;,
+  &quot;end_date&quot;: &quot;2031-03-31&quot;,
+  &quot;delivery_timeline&quot;: &quot;3 months from LOI&quot;,
+  &quot;contract_terms&quot;: &quot;Standard RERC/CERC terms apply...&quot;,
+  &quot;delivery_milestones&quot;: [],
+  &quot;payment_schedule&quot;: &quot;Net 30 days from invoice&quot;,
+  &quot;status&quot;: &quot;pending_vendor_acceptance | active | vendor_declined | completed&quot;,
+  &quot;vendor_response&quot;: &quot;accepted | declined | null&quot;,
+  &quot;vendor_notes&quot;: &quot;We confirm delivery as agreed&quot;,
+  &quot;responded_at&quot;: &quot;2026-02-24T12:00:00Z&quot;,
+  &quot;created_at&quot;: &quot;2026-02-24T10:00:00Z&quot;,
+  &quot;updated_at&quot;: &quot;2026-02-24T12:00:00Z&quot;
+}
+</code></pre>
+<h3 id="97-notifications-collection">9.7 <code>notifications</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;notif_id&quot;: &quot;notif_abc123&quot;,
+  &quot;user_id&quot;: &quot;usr_abc123&quot;,
+  &quot;type&quot;: &quot;new_bid | bid_shortlisted | contract_awarded | bid_rejected | vendor_verified | vendor_rejected | rfq_closed | contract_response&quot;,
+  &quot;title&quot;: &quot;New Bid Received&quot;,
+  &quot;message&quot;: &quot;GreenSun Energy submitted a bid of ₹2.85/kWh for 'Solar Power Supply'&quot;,
+  &quot;link&quot;: &quot;/client/rfqs/rfq_abc123&quot;,
+  &quot;data&quot;: {&quot;bid_id&quot;: &quot;bid_abc123&quot;, &quot;rfq_id&quot;: &quot;rfq_abc123&quot;},
+  &quot;read&quot;: false,
+  &quot;created_at&quot;: &quot;2026-02-24T10:30:00Z&quot;
+}
+</code></pre>
+<h3 id="98-vendor_documents-collection">9.8 <code>vendor_documents</code> Collection</h3>
+<pre><code class="language-json">{
+  &quot;doc_id&quot;: &quot;doc_abc123&quot;,
+  &quot;user_id&quot;: &quot;usr_vendor123&quot;,
+  &quot;doc_type&quot;: &quot;CEA License&quot;,
+  &quot;filename&quot;: &quot;cea_license_2026.pdf&quot;,
+  &quot;data_base64&quot;: &quot;&lt;base64 encoded file — excluded from list responses&gt;&quot;,
+  &quot;size_bytes&quot;: 204800,
+  &quot;status&quot;: &quot;uploaded&quot;,
+  &quot;uploaded_at&quot;: &quot;2026-02-24T10:00:00Z&quot;
+}
+</code></pre>
+<hr />
+<h2 id="10-uiux-design-system">10. UI/UX DESIGN SYSTEM</h2>
+<h3 id="101-color-palette">10.1 Color Palette</h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Hex</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bg-primary</code></td>
+<td><code>#020617</code></td>
+<td>Page backgrounds</td>
+</tr>
+<tr>
+<td><code>bg-card</code></td>
+<td><code>#0F172A</code></td>
+<td>Cards, panels</td>
+</tr>
+<tr>
+<td><code>bg-border</code></td>
+<td><code>#1E293B</code></td>
+<td>Borders, dividers</td>
+</tr>
+<tr>
+<td><code>bg-hover</code></td>
+<td><code>#334155</code></td>
+<td>Hover states</td>
+</tr>
+<tr>
+<td><code>accent-primary</code></td>
+<td><code>#0EA5E9</code></td>
+<td>Sky blue — primary CTA, links</td>
+</tr>
+<tr>
+<td><code>accent-success</code></td>
+<td><code>#10B981</code></td>
+<td>Success states, verified badges</td>
+</tr>
+<tr>
+<td><code>accent-warning</code></td>
+<td><code>#F59E0B</code></td>
+<td>Pending, shortlisted, warnings</td>
+</tr>
+<tr>
+<td><code>accent-danger</code></td>
+<td><code>#EF4444</code></td>
+<td>Errors, rejected, cancelled</td>
+</tr>
+<tr>
+<td><code>accent-purple</code></td>
+<td><code>#A855F7</code></td>
+<td>Awarded, contract states</td>
+</tr>
+<tr>
+<td><code>text-primary</code></td>
+<td><code>#FFFFFF</code></td>
+<td>Headings</td>
+</tr>
+<tr>
+<td><code>text-secondary</code></td>
+<td><code>#E2E8F0</code></td>
+<td>Body text</td>
+</tr>
+<tr>
+<td><code>text-muted</code></td>
+<td><code>#64748B</code></td>
+<td>Labels, metadata</td>
+</tr>
+<tr>
+<td><code>text-faint</code></td>
+<td><code>#475569</code></td>
+<td>Placeholder, disabled</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-typography">10.2 Typography</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Font</th>
+<th>Weight</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Headings</td>
+<td>Chivo</td>
+<td>700–900</td>
+<td>2xl–6xl</td>
+</tr>
+<tr>
+<td>Body</td>
+<td>Inter</td>
+<td>400–600</td>
+<td>sm–base</td>
+</tr>
+<tr>
+<td>Code/Numbers</td>
+<td>JetBrains Mono</td>
+<td>400–700</td>
+<td>xs–lg</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103-component-conventions">10.3 Component Conventions</h3>
+<ul>
+<li><strong>Cards:</strong> <code>bg-[#0F172A] border border-[#1E293B] rounded-sm</code></li>
+<li><strong>Inputs:</strong> <code>bg-[#020617] border border-[#1E293B] focus:border-sky-500</code></li>
+<li><strong>Primary Button:</strong> <code>bg-sky-500 hover:bg-sky-600 text-white rounded-sm</code></li>
+<li><strong>Status Badges:</strong> Consistent across all entities (open=emerald, closed=amber, awarded=purple, rejected=red)</li>
+<li><strong>Borders:</strong> <code>rounded-sm</code> (2px) throughout for industrial aesthetic</li>
+<li><strong>Spacing:</strong> 2-3x more than comfortable — generous whitespace</li>
+</ul>
+<h3 id="104-responsive-design">10.4 Responsive Design</h3>
+<ul>
+<li>Mobile-first with Tailwind breakpoints (<code>sm:</code>, <code>md:</code>, <code>lg:</code>)</li>
+<li>Navbar collapses labels at <code>&lt; md</code> breakpoint (icons only)</li>
+<li>Grid layouts stack on mobile: <code>grid-cols-1 md:grid-cols-2 lg:grid-cols-3</code></li>
+</ul>
+<hr />
+<h2 id="11-notifications-email-system">11. NOTIFICATIONS &amp; EMAIL SYSTEM</h2>
+<h3 id="111-in-app-notifications">11.1 In-App Notifications</h3>
+<p><strong>Architecture:</strong> MongoDB <code>notifications</code> collection, polled every 30 seconds</p>
+<p><strong>Bell Icon Behavior:</strong>
+- Shows unread count badge (blue, capped at "9+")
+- Click opens dropdown (280px width, max 320px height, scrollable)
+- Each notification shows: emoji icon + title + message preview + time ago
+- Unread: <code>bg-sky-500/5</code> background + blue dot indicator
+- Click: mark as read → navigate to link
+- "Mark all read" button: clears all unread in one action</p>
+<p><strong>Notification Types &amp; Emoji Icons:</strong>
+| Type | Icon | Description |
+|------|------|-------------|
+| <code>new_bid</code> | 📨 | New bid received on client's RFQ |
+| <code>bid_shortlisted</code> | ⭐ | Vendor's bid was shortlisted |
+| <code>contract_awarded</code> | 🏆 | Vendor won the contract |
+| <code>bid_rejected</code> | ❌ | Vendor's bid was not selected |
+| <code>vendor_verified</code> | ✅ | Admin verified vendor profile |
+| <code>vendor_rejected</code> | ⚠️ | Vendor verification needs more docs |
+| <code>rfq_closed</code> | 🔒 | Bidding period closed |
+| <code>contract_response</code> | 📋 | Vendor responded to contract |</p>
+<h3 id="112-email-notifications-resend">11.2 Email Notifications (Resend)</h3>
+<p><strong>Setup:</strong> Add <code>RESEND_API_KEY=re_xxx</code> to <code>/app/backend/.env</code></p>
+<p><strong>Graceful Degradation:</strong> If <code>RESEND_API_KEY</code> is missing or placeholder, emails are logged to console but not sent. Application continues normally.</p>
+<p><strong>Email Templates:</strong> HTML with inline CSS, Renergizr brand header, dark background</p>
+<p><strong>Sent For:</strong>
+1. <strong>New Bid</strong> → to Client: bid details table, link to RFQ
+2. <strong>Contract Awarded</strong> → to Vendor: contract summary, 48hr acceptance reminder
+3. <strong>Contract Accepted</strong> → to Client: confirmation + active status
+4. <strong>Contract Declined</strong> → to Client: decline reason + redirect to alternate bids
+5. <strong>Vendor Verified</strong> → to Vendor: full marketplace access announcement</p>
+<hr />
+<h2 id="12-security-authentication">12. SECURITY &amp; AUTHENTICATION</h2>
+<h3 id="121-session-security">12.1 Session Security</h3>
+<ul>
+<li>Passwords: bcrypt (10 rounds)</li>
+<li>Sessions: <code>httponly; secure; samesite=none</code> cookies</li>
+<li>Token format: <code>sess_</code> prefix + 12-char UUID hex</li>
+<li>Expiry: 7 days (stored and validated server-side)</li>
+<li>Logout: server-side session deletion (not just client-side clear)</li>
+</ul>
+<h3 id="122-authorization-model">12.2 Authorization Model</h3>
+<ul>
+<li>All protected routes check <code>get_current_user()</code> middleware</li>
+<li>Role-based access: client endpoints reject vendors, vendor endpoints reject clients</li>
+<li>Admin role passes all role checks (super-user)</li>
+<li>Resource ownership: clients can only modify their own RFQs/contracts; vendors can only modify their own bids</li>
+</ul>
+<h3 id="123-input-validation">12.3 Input Validation</h3>
+<ul>
+<li>Pydantic models validate all request bodies</li>
+<li>File upload: base64 validation before storage</li>
+<li>File size: max 10MB enforced (client-side check in frontend)</li>
+</ul>
+<h3 id="124-cors">12.4 CORS</h3>
+<ul>
+<li>Currently <code>*</code> (all origins) — suitable for development</li>
+<li><strong>Production:</strong> Set <code>CORS_ORIGINS</code> to specific domains in <code>.env</code></li>
+</ul>
+<h3 id="125-known-limitations-pre-production">12.5 Known Limitations (Pre-Production)</h3>
+<ul>
+<li>No rate limiting on API endpoints</li>
+<li>No email verification on registration</li>
+<li>Document storage in MongoDB base64 (not cloud storage) — not suitable for large scale</li>
+<li>Session tokens not encrypted (random UUID is sufficient but not signed JWT)</li>
+</ul>
+<hr />
+<h2 id="13-regulatory-compliance-context">13. REGULATORY &amp; COMPLIANCE CONTEXT</h2>
+<h3 id="131-indias-carbon-credit-trading-scheme-ccts">13.1 India's Carbon Credit Trading Scheme (CCTS)</h3>
+<ul>
+<li>Established under Energy Conservation (Amendment) Act 2022</li>
+<li>Administered by Bureau of Energy Efficiency (BEE) under MoPNG</li>
+<li>Target market: ₹20,000 Crore annually</li>
+<li>Current simulated price: ₹245.50/tCO2e</li>
+<li>Renergizr platform shows CCTS balance for verified vendors in buyer-facing marketplace</li>
+</ul>
+<h3 id="132-eu-carbon-border-adjustment-mechanism-cbam">13.2 EU Carbon Border Adjustment Mechanism (CBAM)</h3>
+<ul>
+<li>Effective: January 2026 for Indian exporters to EU</li>
+<li>Covers: steel, cement, aluminium, fertilizers, electricity, hydrogen</li>
+<li>Current simulated price: €68.50/tCO2e</li>
+<li>Platform shows CBAM price in market ticker and vendor profiles</li>
+</ul>
+<h3 id="133-vendor-verification-requirements">13.3 Vendor Verification Requirements</h3>
+<p>Documents the platform supports for verification:
+| Document | Issuing Authority |
+|----------|------------------|
+| CEA License | Central Electricity Authority |
+| CERC Registration | Central Electricity Regulatory Commission |
+| SECI PPA | Solar Energy Corporation of India |
+| DISCOM Agreement | State Distribution Companies |
+| MNRE Registration | Ministry of New and Renewable Energy |
+| GST Certificate | Goods and Services Tax Network |
+| Company Incorporation | Ministry of Corporate Affairs |</p>
+<h3 id="134-green-certifications-tracked">13.4 Green Certifications Tracked</h3>
+<p>MNRE Approved, ISO 14001 (Environmental Management), ISO 50001 (Energy Management), BEE 5-Star Rating, GreenPro Certification, IGBC Green Building, Carbon Neutral Certified</p>
+<hr />
+<h2 id="14-test-credentials-seed-data">14. TEST CREDENTIALS &amp; SEED DATA</h2>
+<h3 id="141-test-accounts">14.1 Test Accounts</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Email</th>
+<th>Password</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Admin</td>
+<td>admin@renergizr.com</td>
+<td>Admin@123</td>
+<td>Full platform access</td>
+</tr>
+<tr>
+<td>Client 1</td>
+<td>buyer1@acme.com</td>
+<td>Client@123</td>
+<td>Acme Manufacturing</td>
+</tr>
+<tr>
+<td>Client 2</td>
+<td>buyer2@tatapower.com</td>
+<td>Client@123</td>
+<td>Tata Power</td>
+</tr>
+<tr>
+<td>Vendor 1</td>
+<td>vendor1@greensun.com</td>
+<td>Vendor@123</td>
+<td>CCTS Verified, 12,500 tCO2e</td>
+</tr>
+<tr>
+<td>Vendor 2</td>
+<td>vendor2@windpower.com</td>
+<td>Vendor@123</td>
+<td>Pending verification</td>
+</tr>
+</tbody>
+</table>
+<h3 id="142-seed-script">14.2 Seed Script</h3>
+<p>Run to populate database with test data:</p>
+<pre><code class="language-bash">cd /app
+python3 scripts/seed_data.py
+</code></pre>
+<h3 id="143-current-database-state-as-of-feb-2026">14.3 Current Database State (as of Feb 2026)</h3>
+<ul>
+<li>7 users (4 clients, 2 vendors, 1 admin)</li>
+<li>7 RFQs (4 open, 2 awarded, 1 in various states)</li>
+<li>2 bids (from test sessions)</li>
+<li>2 active contracts</li>
+<li>Active notifications in system</li>
+</ul>
+<hr />
+<h2 id="15-deployment-architecture">15. DEPLOYMENT ARCHITECTURE</h2>
+<h3 id="151-kubernetes-configuration-emergent-platform">15.1 Kubernetes Configuration (Emergent Platform)</h3>
+<pre><code class="language-yaml">replicas: 2
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+services:
+  backend:
+    port: 8001
+    command: uvicorn server:app --host 0.0.0.0 --port 8001
+  frontend:
+    port: 3000
+    command: yarn start (craco start)
+</code></pre>
+<h3 id="152-environment-variables">15.2 Environment Variables</h3>
+<p><strong>Backend (<code>/app/backend/.env</code>):</strong></p>
+<pre><code class="language-env">MONGO_URL=mongodb://localhost:27017
+DB_NAME=test_database
+CORS_ORIGINS=*
+EMERGENT_LLM_KEY=sk-emergent-xxxxx
+RESEND_API_KEY=re_your_resend_key_here
+SENDER_EMAIL=noreply@renergizr.com
+</code></pre>
+<p><strong>Frontend (<code>/app/frontend/.env</code>):</strong></p>
+<pre><code class="language-env">REACT_APP_BACKEND_URL=https://your-app.emergent.host
+WDS_SOCKET_PORT=443
+ENABLE_HEALTH_CHECK=false
+</code></pre>
+<h3 id="153-routing">15.3 Routing</h3>
+<ul>
+<li>All backend routes: prefix <code>/api</code> → routed to port 8001</li>
+<li>All frontend routes: no prefix → routed to port 3000</li>
+<li>Google OAuth callback: <code>window.location.origin</code> (no hardcoded URLs)</li>
+</ul>
+<h3 id="154-deployment-readiness-checklist">15.4 Deployment Readiness Checklist</h3>
+<ul>
+<li>✅ No hardcoded URLs in source code</li>
+<li>✅ All credentials from environment variables</li>
+<li>✅ CORS configured (currently <code>*</code>)</li>
+<li>✅ MongoDB connection via <code>MONGO_URL</code> env var</li>
+<li>✅ Google OAuth uses <code>window.location.origin</code> (no hardcoded redirect URIs)</li>
+<li>✅ Graceful degradation for missing RESEND_API_KEY</li>
+<li>✅ No blocking synchronous DB calls (all async/await)</li>
+<li>✅ No ML/blockchain special dependencies</li>
+<li>⚠️ Set <code>CORS_ORIGINS</code> to specific domain for production</li>
+<li>⚠️ Configure <code>RESEND_API_KEY</code> for email delivery</li>
+<li>⚠️ Set up MongoDB replica set for production</li>
+</ul>
+<hr />
+<h2 id="16-roadmap-backlog">16. ROADMAP &amp; BACKLOG</h2>
+<h3 id="p0-critical-for-production-launch">P0 — Critical for Production Launch</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Resend Email</td>
+<td>Configure <code>RESEND_API_KEY</code> for actual delivery</td>
+<td>1 hour</td>
+</tr>
+<tr>
+<td>Payment Integration</td>
+<td>Razorpay/Stripe for platform transaction fees (0.5–1%)</td>
+<td>3 days</td>
+</tr>
+<tr>
+<td>Real CCTS Data Feed</td>
+<td>Connect to BEE/IEXC API for live carbon credit prices</td>
+<td>2 days</td>
+</tr>
+<tr>
+<td>Push Notifications</td>
+<td>Browser push + mobile push for key events</td>
+<td>2 days</td>
+</tr>
+</tbody>
+</table>
+<h3 id="p1-high-value-features">P1 — High Value Features</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bid Counter-offer</td>
+<td>Vendors propose modified price; client accepts/negotiates</td>
+<td>2 days</td>
+</tr>
+<tr>
+<td>RFQ Templates</td>
+<td>Pre-built RFQ templates by energy type (Solar PPA, Wind Franchise)</td>
+<td>1 day</td>
+</tr>
+<tr>
+<td>Admin Document Viewer</td>
+<td>Admin can view/download uploaded vendor compliance docs</td>
+<td>1 day</td>
+</tr>
+<tr>
+<td>Vendor Analytics</td>
+<td>Win rate, pricing benchmark vs market, bid history charts</td>
+<td>2 days</td>
+</tr>
+<tr>
+<td>Vendor Shortlisting (Invite)</td>
+<td>Client invites specific vendors to an RFQ (closed tender)</td>
+<td>1 day</td>
+</tr>
+<tr>
+<td>Multi-language Support</td>
+<td>Hindi + Marathi UI localization</td>
+<td>3 days</td>
+</tr>
+</tbody>
+</table>
+<h3 id="p2-future-enhancements">P2 — Future Enhancements</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Invoice / PO Generation</td>
+<td>PDF invoice + purchase order generation post-award</td>
+<td>2 days</td>
+</tr>
+<tr>
+<td>Carbon Credit Marketplace</td>
+<td>Vendors buy/sell credits peer-to-peer</td>
+<td>5 days</td>
+</tr>
+<tr>
+<td>Energy Price Alerts</td>
+<td>Email/push when market price crosses threshold</td>
+<td>1 day</td>
+</tr>
+<tr>
+<td>MNRE/CEA API Integration</td>
+<td>Real regulatory verification via govt APIs</td>
+<td>3 days</td>
+</tr>
+<tr>
+<td>Mobile App (React Native)</td>
+<td>iOS + Android app for on-the-go bid tracking</td>
+<td>2 weeks</td>
+</tr>
+<tr>
+<td>Enterprise SSO (SAML)</td>
+<td>For large enterprise clients (Tata, Adani, Reliance)</td>
+<td>3 days</td>
+</tr>
+<tr>
+<td>White-label</td>
+<td>Custom branding per enterprise client</td>
+<td>1 week</td>
+</tr>
+<tr>
+<td>Live Market Data Feed</td>
+<td>IEXC / PowerEx API for real energy spot prices</td>
+<td>2 days</td>
+</tr>
+<tr>
+<td>API Documentation Portal</td>
+<td>Swagger UI + OpenAPI JSON export</td>
+<td>0.5 days</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="17-known-issues-tech-debt">17. KNOWN ISSUES &amp; TECH DEBT</h2>
+<h3 id="active-issues">Active Issues</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Issue</th>
+<th>Location</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>Emails not delivered</td>
+<td>backend/.env</td>
+<td>Add RESEND_API_KEY</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>No email verification on registration</td>
+<td>server.py</td>
+<td>Add verification token flow</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Document storage in MongoDB base64</td>
+<td>vendor_documents collection</td>
+<td>Migrate to cloud storage (S3/GCS)</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Market data is simulated</td>
+<td>server.py <code>/market/insights</code></td>
+<td>Connect to live IEXC/CCTS API</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>No rate limiting on APIs</td>
+<td>server.py</td>
+<td>Add slowapi or nginx rate limits</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tech-debt">Tech Debt</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Description</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>server.py monolith</td>
+<td>~1000 lines; should split into routers</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>No pagination</td>
+<td><code>.to_list(200)</code> on all queries; add skip/limit</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>No full-text search</td>
+<td>Marketplace search is filter-only; add MongoDB Atlas Search</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>No audit log</td>
+<td>No record of who changed what when</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Session cleanup</td>
+<td>Old sessions not auto-deleted (TTL index recommended)</td>
+<td>Low</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="18-changelog">18. CHANGELOG</h2>
+<h3 id="v12-february-2026">v1.2 — February 2026</h3>
+<ul>
+<li><strong>NEW:</strong> Full trading workflow state machine (RFQ close bidding → award contract → vendor accept/decline)</li>
+<li><strong>NEW:</strong> Real-time notification system (MongoDB-backed, 8 event types, bell dropdown with unread count)</li>
+<li><strong>NEW:</strong> Email notification system (Resend integration, graceful degradation)</li>
+<li><strong>NEW:</strong> Real vendor document upload (base64, PDF/JPG/PNG, per type)</li>
+<li><strong>NEW:</strong> Contract management pages for client and vendor (<code>/client/contracts</code>, <code>/vendor/contracts</code>)</li>
+<li><strong>NEW:</strong> Award Contract modal with customizable terms and payment schedule</li>
+<li><strong>NEW:</strong> Bid shortlisting toggle</li>
+<li><strong>NEW:</strong> Workflow steps visualization in RFQ detail sidebar</li>
+<li><strong>NEW:</strong> Auto-reject other bids when contract is awarded</li>
+<li><strong>UPDATED:</strong> Vendor RFQ view shows contract offer card with accept/decline</li>
+<li><strong>UPDATED:</strong> Navbar adds "Contracts" link for both client and vendor roles</li>
+<li><strong>UPDATED:</strong> Admin analytics includes contracts count</li>
+</ul>
+<h3 id="v11-february-2026">v1.1 — February 2026</h3>
+<ul>
+<li><strong>NEW:</strong> Comprehensive public landing page (market ticker, bento features, CCTS/CBAM section)</li>
+<li><strong>NEW:</strong> Vendor profile — Carbon Credits widget with market value calculator</li>
+<li><strong>NEW:</strong> AI bid ranking (Gemini 2.0 Flash) with strengths/gaps/recommendation</li>
+<li><strong>NEW:</strong> 4-step RFQ creation wizard with technical specs, logistics, financial terms</li>
+<li><strong>NEW:</strong> Admin dashboard with analytics charts</li>
+<li><strong>IMPROVED:</strong> Complete UI/UX redesign (dark industrial theme, Chivo + JetBrains Mono fonts)</li>
+<li><strong>IMPROVED:</strong> SEO meta tags on landing page</li>
+</ul>
+<h3 id="v10-january-2026">v1.0 — January 2026</h3>
+<ul>
+<li><strong>NEW:</strong> Project foundation — FastAPI + React + MongoDB</li>
+<li><strong>NEW:</strong> JWT + Google OAuth authentication</li>
+<li><strong>NEW:</strong> Role-based access (Client, Vendor, Admin)</li>
+<li><strong>NEW:</strong> Basic RFQ creation and listing</li>
+<li><strong>NEW:</strong> Vendor bid submission</li>
+<li><strong>NEW:</strong> Admin user and vendor management</li>
+<li><strong>NEW:</strong> Seed data script</li>
+</ul>
+<hr />
+<p><em>Document maintained by Emergent Labs for Renergizr Industries Pvt. Ltd.</em>
+<em>For technical queries: emergentlabs.ai | For business queries: renergizr.com</em></p>
+  <div class="footer">
+    Renergizr Industries Private Limited &nbsp;·&nbsp; Confidential &nbsp;·&nbsp; February 2026<br>
+    Generated by Emergent Labs &nbsp;·&nbsp; emergentlabs.ai
+  </div>
+</div>
+</body>
+</html>
