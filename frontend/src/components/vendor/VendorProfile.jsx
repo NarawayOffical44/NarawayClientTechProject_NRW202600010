@@ -11,6 +11,7 @@ const REG_DOCS = ['CEA License', 'CERC Registration', 'SECI PPA', 'DISCOM Agreem
 
 export default function VendorProfile() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -21,6 +22,9 @@ export default function VendorProfile() {
     contact_phone: '', website: '', location: '', regulatory_docs: [],
   });
   const [verificationStatus, setVerificationStatus] = useState('pending');
+  const [uploadedDocs, setUploadedDocs] = useState([]);
+  const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [selectedDocType, setSelectedDocType] = useState('');
 
   useEffect(() => {
     axios.get(`${API}/vendor/profile`, { withCredentials: true })
