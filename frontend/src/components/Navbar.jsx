@@ -38,8 +38,8 @@ export default function Navbar() {
   const roleBg = user.role === 'client' ? 'bg-sky-500/10' : user.role === 'vendor' ? 'bg-emerald-500/10' : 'bg-amber-500/10';
 
   const handleLogout = async () => {
-    await logout();
     navigate('/');
+    await logout();
   };
 
   return (
