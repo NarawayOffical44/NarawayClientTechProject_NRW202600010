@@ -75,11 +75,14 @@ class TestAuth:
         assert r.json()["email"] == CLIENT_EMAIL
 
 
-# Market Insights (requires auth)
+# Market Insights (public endpoint)
 class TestMarketInsights:
-    def test_market_insights_requires_auth(self):
+    def test_market_insights_public(self):
         r = requests.get(f"{BASE_URL}/api/market/insights")
-        assert r.status_code == 401
+        assert r.status_code == 200  # Public endpoint, no auth required
+        data = r.json()
+        assert "energy_prices" in data
+        assert "carbon" in data
 
     def test_market_insights_with_auth(self, client_session):
         r = client_session.get(f"{BASE_URL}/api/market/insights")
