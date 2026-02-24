@@ -13,21 +13,24 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [rfqs, setRfqs] = useState([]);
+  const [marketData, setMarketData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [aRes, uRes, vRes, rRes] = await Promise.all([
+      const [aRes, uRes, vRes, rRes, mRes] = await Promise.all([
         axios.get(`${API}/admin/analytics`, { withCredentials: true }),
         axios.get(`${API}/admin/users`, { withCredentials: true }),
         axios.get(`${API}/admin/vendors`, { withCredentials: true }),
         axios.get(`${API}/admin/rfqs`, { withCredentials: true }),
+        axios.get(`${API}/market/insights`, { withCredentials: true }),
       ]);
       setAnalytics(aRes.data);
       setUsers(uRes.data);
       setVendors(vRes.data);
       setRfqs(rRes.data);
+      setMarketData(mRes.data);
     } catch (err) {
       console.error(err);
     } finally {
