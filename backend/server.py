@@ -12,6 +12,9 @@ from datetime import datetime, timezone, timedelta
 import bcrypt
 import httpx
 import json
+import asyncio
+import base64
+import resend
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 ROOT_DIR = Path(__file__).parent
@@ -66,13 +69,58 @@ async def get_current_user(request: Request):
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
+async def create_notification(user_id: str, notif_type: str, title: str, message: str, link: str = None, data: dict = None):
+    notif = {
+        "notif_id": generate_id("notif_"),
+        "user_id": user_id,
+        "type": notif_type,
+        "title": title,
+        "message": message,
+        "link": link,
+        "data": data or {},
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notif)
+    return notif
+
+async def send_email_notification(to: str, subject: str, html: str):
+    api_key = os.environ.get("RESEND_API_KEY", "")
+    sender = os.environ.get("SENDER_EMAIL", "noreply@renergizr.com")
+    if not api_key or api_key.startswith("re_placeholder"):
+        logger.info(f"Email skipped (no RESEND_API_KEY configured): to={to}, subject={subject}")
+        return
+    resend.api_key = api_key
+    try:
+        params = {"from": sender, "to": [to], "subject": subject, "html": html}
+        await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Email sent to {to}: {subject}")
+    except Exception as e:
+        logger.error(f"Email failed to {to}: {e}")
+
+def email_base_html(title: str, body: str) -> str:
+    return f"""
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#020617;color:#e2e8f0;padding:32px;border-radius:8px;border:1px solid #1e293b">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px">
+        <div style="width:24px;height:24px;background:#0ea5e9;border-radius:4px;display:flex;align-items:center;justify-content:center">
+          <span style="color:white;font-weight:900;font-size:14px">R</span>
+        </div>
+        <span style="font-weight:900;font-size:16px;color:white;letter-spacing:1px">RENERGIZR</span>
+      </div>
+      <h2 style="color:#0ea5e9;margin-bottom:16px;font-size:20px">{title}</h2>
+      {body}
+      <hr style="border:none;border-top:1px solid #1e293b;margin:24px 0" />
+      <p style="color:#64748b;font-size:11px">Renergizr Industries Pvt. Ltd. · B2B Energy Trading Platform · India</p>
+    </div>
+    """
+
 # ---- MODELS ----
 
 class RegisterRequest(BaseModel):
     email: str
     password: str
     name: str
-    role: str  # client/vendor
+    role: str
     company: Optional[str] = None
 
 class LoginRequest(BaseModel):
@@ -108,7 +156,22 @@ class BidCreate(BaseModel):
     notes: Optional[str] = None
 
 class BidStatusUpdate(BaseModel):
-    status: str  # accepted/rejected
+    status: str
+
+class AwardBid(BaseModel):
+    contract_terms: Optional[str] = None
+    delivery_milestones: Optional[List[str]] = []
+    payment_schedule: Optional[str] = None
+
+class ContractResponseRequest(BaseModel):
+    accept: bool
+    notes: Optional[str] = None
+
+class DocumentUpload(BaseModel):
+    doc_type: str
+    filename: str
+    data_base64: str
+    size_bytes: Optional[int] = None
 
 class VendorProfileUpdate(BaseModel):
     company_name: str
@@ -313,6 +376,8 @@ async def create_rfq(data: RFQCreate, request: Request):
         "bid_count": 0,
         "ai_analysis_summary": None,
         "best_bid_id": None,
+        "awarded_bid_id": None,
+        "contract_id": None,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -328,8 +393,8 @@ async def list_rfqs(request: Request, status: Optional[str] = None, energy_type:
         if status:
             query["status"] = status
     elif user["role"] == "vendor":
-        query["status"] = "open"
-    else:  # admin
+        query["status"] = {"$in": ["open"]}
+    else:
         if status:
             query["status"] = status
     if energy_type:
@@ -356,6 +421,33 @@ async def update_rfq_status(rfq_id: str, data: RFQStatusUpdate, request: Request
     await db.rfqs.update_one({"rfq_id": rfq_id}, {"$set": {"status": data.status, "updated_at": datetime.now(timezone.utc).isoformat()}})
     return {"message": "Status updated"}
 
+@api_router.post("/rfqs/{rfq_id}/close-bidding")
+async def close_bidding(rfq_id: str, request: Request):
+    user = await get_current_user(request)
+    rfq = await db.rfqs.find_one({"rfq_id": rfq_id}, {"_id": 0})
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    if rfq["client_id"] != user["user_id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    if rfq["status"] != "open":
+        raise HTTPException(status_code=400, detail="RFQ is not open for bidding")
+
+    await db.rfqs.update_one(
+        {"rfq_id": rfq_id},
+        {"$set": {"status": "bidding_closed", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Notify all vendors who bid
+    bids = await db.bids.find({"rfq_id": rfq_id}, {"_id": 0}).to_list(200)
+    for bid in bids:
+        await create_notification(
+            bid["vendor_id"], "rfq_closed", "Bidding Period Closed",
+            f"The bidding period for '{rfq['title']}' has closed. The client is reviewing bids.",
+            link=f"/vendor/rfqs/{rfq_id}"
+        )
+
+    return {"message": "Bidding closed", "status": "bidding_closed"}
+
 # ---- BID ENDPOINTS ----
 
 @api_router.post("/rfqs/{rfq_id}/bids")
@@ -381,6 +473,7 @@ async def submit_bid(rfq_id: str, data: BidCreate, request: Request):
         "vendor_name": user["name"],
         "vendor_company": vendor_profile.get("company_name", user["name"]) if vendor_profile else user["name"],
         "vendor_location": vendor_profile.get("location", "") if vendor_profile else "",
+        "vendor_verification": vendor_profile.get("verification_status", "pending") if vendor_profile else "pending",
         "price_per_unit": data.price_per_unit,
         "quantity_mw": data.quantity_mw,
         "delivery_timeline": data.delivery_timeline,
@@ -389,10 +482,34 @@ async def submit_bid(rfq_id: str, data: BidCreate, request: Request):
         "ai_score": None,
         "ai_analysis": None,
         "status": "submitted",
+        "contract_id": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.bids.insert_one(bid)
     await db.rfqs.update_one({"rfq_id": rfq_id}, {"$inc": {"bid_count": 1}})
+
+    # Notify client about new bid
+    await create_notification(
+        rfq["client_id"], "new_bid", "New Bid Received",
+        f"{bid['vendor_company']} submitted a bid of ₹{bid['price_per_unit']}/kWh for '{rfq['title']}'.",
+        link=f"/client/rfqs/{rfq_id}",
+        data={"bid_id": bid_id, "rfq_id": rfq_id}
+    )
+
+    # Send email to client
+    client_user = await db.users.find_one({"user_id": rfq["client_id"]}, {"_id": 0})
+    if client_user:
+        body = f"""<p>Dear {rfq['client_name']},</p>
+        <p>A new bid has been received for your RFQ <strong style="color:#0ea5e9">{rfq['title']}</strong>:</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <tr><td style="padding:8px;color:#64748b;border-bottom:1px solid #1e293b">Vendor</td><td style="padding:8px;color:#e2e8f0;border-bottom:1px solid #1e293b">{bid['vendor_company']}</td></tr>
+          <tr><td style="padding:8px;color:#64748b;border-bottom:1px solid #1e293b">Price</td><td style="padding:8px;color:#0ea5e9;border-bottom:1px solid #1e293b">₹{bid['price_per_unit']}/kWh</td></tr>
+          <tr><td style="padding:8px;color:#64748b;border-bottom:1px solid #1e293b">Quantity</td><td style="padding:8px;color:#e2e8f0;border-bottom:1px solid #1e293b">{bid['quantity_mw']} MW</td></tr>
+          <tr><td style="padding:8px;color:#64748b">Timeline</td><td style="padding:8px;color:#e2e8f0">{bid['delivery_timeline']}</td></tr>
+        </table>
+        <p>Log in to Renergizr to review and compare all bids.</p>"""
+        await send_email_notification(client_user["email"], f"New Bid: {rfq['title']}", email_base_html(f"New Bid on {rfq['title']}", body))
+
     return {k: v for k, v in bid.items() if k != "_id"}
 
 @api_router.get("/rfqs/{rfq_id}/bids")
@@ -518,6 +635,34 @@ Respond ONLY with valid JSON in exactly this format:
     )
     return ai_result
 
+@api_router.patch("/rfqs/{rfq_id}/bids/{bid_id}/shortlist")
+async def toggle_shortlist_bid(rfq_id: str, bid_id: str, request: Request):
+    user = await get_current_user(request)
+    rfq = await db.rfqs.find_one({"rfq_id": rfq_id}, {"_id": 0})
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    if rfq["client_id"] != user["user_id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    bid = await db.bids.find_one({"bid_id": bid_id}, {"_id": 0})
+    if not bid:
+        raise HTTPException(status_code=404, detail="Bid not found")
+
+    if bid["status"] in ["accepted", "rejected", "contract_signed", "contract_declined"]:
+        raise HTTPException(status_code=400, detail="Cannot change status of a finalized bid")
+
+    new_status = "submitted" if bid["status"] == "shortlisted" else "shortlisted"
+    await db.bids.update_one({"bid_id": bid_id}, {"$set": {"status": new_status}})
+
+    if new_status == "shortlisted":
+        await create_notification(
+            bid["vendor_id"], "bid_shortlisted", "Your Bid Was Shortlisted!",
+            f"Great news! Your bid for '{rfq['title']}' has been shortlisted by the client.",
+            link=f"/vendor/rfqs/{rfq_id}"
+        )
+
+    return {"message": f"Bid {new_status}", "status": new_status}
+
 @api_router.patch("/rfqs/{rfq_id}/bids/{bid_id}/status")
 async def update_bid_status(rfq_id: str, bid_id: str, data: BidStatusUpdate, request: Request):
     user = await get_current_user(request)
@@ -531,7 +676,179 @@ async def update_bid_status(rfq_id: str, bid_id: str, data: BidStatusUpdate, req
         await db.rfqs.update_one({"rfq_id": rfq_id}, {"$set": {"status": "awarded", "awarded_bid_id": bid_id}})
     return {"message": "Bid status updated"}
 
-# ---- VENDOR PROFILE ----
+@api_router.post("/rfqs/{rfq_id}/award/{bid_id}")
+async def award_contract(rfq_id: str, bid_id: str, data: AwardBid, request: Request):
+    user = await get_current_user(request)
+    rfq = await db.rfqs.find_one({"rfq_id": rfq_id}, {"_id": 0})
+    if not rfq:
+        raise HTTPException(status_code=404, detail="RFQ not found")
+    if rfq["client_id"] != user["user_id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    if rfq["status"] not in ["open", "bidding_closed"]:
+        raise HTTPException(status_code=400, detail="RFQ is not in a state to award")
+
+    bid = await db.bids.find_one({"bid_id": bid_id}, {"_id": 0})
+    if not bid:
+        raise HTTPException(status_code=404, detail="Bid not found")
+
+    contract_id = generate_id("con_")
+    # Estimate total value: price * quantity * 8760 hours/year (approximate annual MWh)
+    approx_annual_mwh = bid["quantity_mw"] * 8760 * 0.25  # 25% capacity factor
+    total_value = round(bid["price_per_unit"] * approx_annual_mwh * 1000, 2)  # kWh to MWh conversion
+
+    contract = {
+        "contract_id": contract_id,
+        "rfq_id": rfq_id,
+        "rfq_title": rfq["title"],
+        "bid_id": bid_id,
+        "client_id": rfq["client_id"],
+        "client_name": rfq["client_name"],
+        "client_company": rfq.get("client_company", ""),
+        "vendor_id": bid["vendor_id"],
+        "vendor_name": bid["vendor_name"],
+        "vendor_company": bid["vendor_company"],
+        "energy_type": rfq["energy_type"],
+        "quantity_mw": rfq["quantity_mw"],
+        "price_per_unit": bid["price_per_unit"],
+        "estimated_annual_value_inr": total_value,
+        "delivery_location": rfq["delivery_location"],
+        "start_date": rfq["start_date"],
+        "end_date": rfq["end_date"],
+        "delivery_timeline": bid["delivery_timeline"],
+        "contract_terms": data.contract_terms or "Standard RERC/CERC terms apply. Governed by Indian Electricity Act 2003 and applicable MNRE regulations.",
+        "delivery_milestones": data.delivery_milestones or [],
+        "payment_schedule": data.payment_schedule or "Net 30 days from invoice date",
+        "status": "pending_vendor_acceptance",
+        "vendor_response": None,
+        "vendor_notes": None,
+        "responded_at": None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.contracts.insert_one(contract)
+
+    # Update RFQ status
+    await db.rfqs.update_one(
+        {"rfq_id": rfq_id},
+        {"$set": {"status": "awarded", "awarded_bid_id": bid_id, "contract_id": contract_id, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    # Accept winner bid
+    await db.bids.update_one({"bid_id": bid_id}, {"$set": {"status": "accepted", "contract_id": contract_id}})
+    # Reject all other bids
+    await db.bids.update_many(
+        {"rfq_id": rfq_id, "bid_id": {"$ne": bid_id}, "status": {"$nin": ["accepted"]}},
+        {"$set": {"status": "rejected"}}
+    )
+
+    # Notify winning vendor
+    await create_notification(
+        bid["vendor_id"], "contract_awarded", "Contract Awarded to You!",
+        f"Congratulations! You have been awarded the contract for '{rfq['title']}'. Please review and accept.",
+        link=f"/vendor/rfqs/{rfq_id}",
+        data={"contract_id": contract_id}
+    )
+
+    # Notify other vendors
+    other_bids = await db.bids.find({"rfq_id": rfq_id, "bid_id": {"$ne": bid_id}}, {"_id": 0}).to_list(200)
+    for ob in other_bids:
+        await create_notification(
+            ob["vendor_id"], "bid_rejected", "Bid Not Selected",
+            f"Your bid for '{rfq['title']}' was not selected this time. Thank you for participating.",
+            link=f"/vendor/rfqs/{rfq_id}"
+        )
+
+    # Email winning vendor
+    vendor_user = await db.users.find_one({"user_id": bid["vendor_id"]}, {"_id": 0})
+    if vendor_user:
+        body = f"""<p>Dear {bid['vendor_name']},</p>
+        <p>Congratulations! Your bid has been selected and a contract has been created for:</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <tr><td style="padding:8px;color:#64748b;border-bottom:1px solid #1e293b">RFQ</td><td style="padding:8px;color:#e2e8f0;border-bottom:1px solid #1e293b">{rfq['title']}</td></tr>
+          <tr><td style="padding:8px;color:#64748b;border-bottom:1px solid #1e293b">Energy Type</td><td style="padding:8px;color:#e2e8f0;border-bottom:1px solid #1e293b">{rfq['energy_type'].replace('_',' ').title()}</td></tr>
+          <tr><td style="padding:8px;color:#64748b;border-bottom:1px solid #1e293b">Quantity</td><td style="padding:8px;color:#e2e8f0;border-bottom:1px solid #1e293b">{rfq['quantity_mw']} MW</td></tr>
+          <tr><td style="padding:8px;color:#64748b;border-bottom:1px solid #1e293b">Price</td><td style="padding:8px;color:#0ea5e9;border-bottom:1px solid #1e293b">₹{bid['price_per_unit']}/kWh</td></tr>
+          <tr><td style="padding:8px;color:#64748b">Location</td><td style="padding:8px;color:#e2e8f0">{rfq['delivery_location']}</td></tr>
+        </table>
+        <p>Please log in to Renergizr to <strong>review and accept the contract</strong> within 48 hours.</p>"""
+        await send_email_notification(vendor_user["email"], f"Contract Awarded: {rfq['title']}", email_base_html("You've Been Awarded a Contract!", body))
+
+    return {k: v for k, v in contract.items() if k != "_id"}
+
+# ---- CONTRACT ENDPOINTS ----
+
+@api_router.get("/contracts")
+async def get_contracts(request: Request):
+    user = await get_current_user(request)
+    if user["role"] == "client":
+        contracts = await db.contracts.find({"client_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    elif user["role"] == "vendor":
+        contracts = await db.contracts.find({"vendor_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    else:
+        contracts = await db.contracts.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return contracts
+
+@api_router.get("/contracts/{contract_id}")
+async def get_contract(contract_id: str, request: Request):
+    user = await get_current_user(request)
+    contract = await db.contracts.find_one({"contract_id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract["client_id"] != user["user_id"] and contract["vendor_id"] != user["user_id"] and user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return contract
+
+@api_router.post("/contracts/{contract_id}/respond")
+async def respond_to_contract(contract_id: str, data: ContractResponseRequest, request: Request):
+    user = await get_current_user(request)
+    contract = await db.contracts.find_one({"contract_id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract["vendor_id"] != user["user_id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    if contract["status"] != "pending_vendor_acceptance":
+        raise HTTPException(status_code=400, detail="Contract already responded to")
+
+    new_status = "active" if data.accept else "vendor_declined"
+    await db.contracts.update_one(
+        {"contract_id": contract_id},
+        {"$set": {
+            "status": new_status,
+            "vendor_response": "accepted" if data.accept else "declined",
+            "vendor_notes": data.notes,
+            "responded_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+
+    bid_status = "contract_signed" if data.accept else "contract_declined"
+    await db.bids.update_one({"bid_id": contract["bid_id"]}, {"$set": {"status": bid_status}})
+
+    action = "accepted" if data.accept else "declined"
+    await create_notification(
+        contract["client_id"], "contract_response", f"Contract {action.capitalize()} by Vendor",
+        f"{contract['vendor_company']} has {action} the contract for '{contract['rfq_title']}' ({contract['energy_type']}, {contract['quantity_mw']} MW).",
+        link=f"/client/rfqs/{contract['rfq_id']}"
+    )
+
+    # Email client
+    client_user = await db.users.find_one({"user_id": contract["client_id"]}, {"_id": 0})
+    if client_user:
+        if data.accept:
+            body = f"""<p>Dear {contract['client_name']},</p>
+            <p><strong style="color:#10b981">{contract['vendor_company']}</strong> has accepted the contract for <strong style="color:#0ea5e9">{contract['rfq_title']}</strong>.</p>
+            <p>The contract is now <strong>Active</strong>. Energy delivery will proceed as per agreed terms.</p>
+            {'<p>Vendor notes: ' + data.notes + '</p>' if data.notes else ''}"""
+            await send_email_notification(client_user["email"], f"Contract Accepted: {contract['rfq_title']}", email_base_html("Contract Accepted!", body))
+        else:
+            body = f"""<p>Dear {contract['client_name']},</p>
+            <p>{contract['vendor_company']} has declined the contract for <strong style="color:#0ea5e9">{contract['rfq_title']}</strong>.</p>
+            {'<p>Reason: ' + data.notes + '</p>' if data.notes else ''}
+            <p>Please log in to Renergizr to review other bids and award the contract to an alternative vendor.</p>"""
+            await send_email_notification(client_user["email"], f"Contract Declined: {contract['rfq_title']}", email_base_html("Contract Declined by Vendor", body))
+
+    return {"message": f"Contract {action}", "status": new_status}
+
+# ---- VENDOR PROFILE & DOCUMENTS ----
 
 @api_router.get("/vendor/profile")
 async def get_vendor_profile(request: Request):
@@ -552,6 +869,50 @@ async def update_vendor_profile(data: VendorProfileUpdate, request: Request):
     profile = await db.vendor_profiles.find_one({"user_id": user["user_id"]}, {"_id": 0})
     return profile
 
+@api_router.post("/vendor/documents/upload")
+async def upload_document(data: DocumentUpload, request: Request):
+    user = await get_current_user(request)
+    if user["role"] != "vendor":
+        raise HTTPException(status_code=403, detail="Only vendors can upload documents")
+
+    try:
+        base64.b64decode(data.data_base64, validate=True)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid base64 data")
+
+    doc_id = generate_id("doc_")
+    doc = {
+        "doc_id": doc_id,
+        "user_id": user["user_id"],
+        "doc_type": data.doc_type,
+        "filename": data.filename,
+        "data_base64": data.data_base64,
+        "size_bytes": data.size_bytes or 0,
+        "status": "uploaded",
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.vendor_documents.replace_one(
+        {"user_id": user["user_id"], "doc_type": data.doc_type},
+        doc, upsert=True
+    )
+
+    # Mark doc type in vendor profile
+    await db.vendor_profiles.update_one(
+        {"user_id": user["user_id"]},
+        {"$addToSet": {"regulatory_docs": data.doc_type}}
+    )
+
+    result = {k: v for k, v in doc.items() if k not in ["_id", "data_base64"]}
+    return result
+
+@api_router.get("/vendor/documents")
+async def get_vendor_documents(request: Request):
+    user = await get_current_user(request)
+    if user["role"] != "vendor":
+        raise HTTPException(status_code=403, detail="Only vendors can view documents")
+    docs = await db.vendor_documents.find({"user_id": user["user_id"]}, {"_id": 0, "data_base64": 0}).to_list(50)
+    return docs
+
 @api_router.get("/vendor/bids")
 async def get_my_bids(request: Request):
     user = await get_current_user(request)
@@ -561,8 +922,32 @@ async def get_my_bids(request: Request):
     enriched = []
     for bid in bids:
         rfq = await db.rfqs.find_one({"rfq_id": bid["rfq_id"]}, {"_id": 0, "title": 1, "energy_type": 1, "delivery_location": 1, "status": 1, "quantity_mw": 1})
-        enriched.append({**bid, "rfq": rfq})
+        contract = None
+        if bid.get("contract_id"):
+            contract = await db.contracts.find_one({"contract_id": bid["contract_id"]}, {"_id": 0})
+        enriched.append({**bid, "rfq": rfq, "contract": contract})
     return enriched
+
+# ---- NOTIFICATIONS ----
+
+@api_router.get("/notifications")
+async def get_notifications(request: Request):
+    user = await get_current_user(request)
+    notifs = await db.notifications.find({"user_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    unread = await db.notifications.count_documents({"user_id": user["user_id"], "read": False})
+    return {"notifications": notifs, "unread_count": unread}
+
+@api_router.patch("/notifications/{notif_id}/read")
+async def mark_notification_read(notif_id: str, request: Request):
+    user = await get_current_user(request)
+    await db.notifications.update_one({"notif_id": notif_id, "user_id": user["user_id"]}, {"$set": {"read": True}})
+    return {"message": "Marked as read"}
+
+@api_router.post("/notifications/read-all")
+async def mark_all_notifications_read(request: Request):
+    user = await get_current_user(request)
+    await db.notifications.update_many({"user_id": user["user_id"]}, {"$set": {"read": True}})
+    return {"message": "All notifications marked as read"}
 
 # ---- ADMIN ENDPOINTS ----
 
@@ -585,6 +970,24 @@ async def admin_update_user(target_user_id: str, data: AdminUserUpdate, request:
     await db.users.update_one({"user_id": target_user_id}, {"$set": update_data})
     if "verification_status" in update_data:
         await db.vendor_profiles.update_one({"user_id": target_user_id}, {"$set": {"verification_status": update_data["verification_status"]}})
+        # Send notification to vendor
+        status = update_data["verification_status"]
+        if status == "verified":
+            await create_notification(
+                target_user_id, "vendor_verified", "Profile Verified!",
+                "Your vendor profile has been verified by Renergizr. You now have full access to bid on all RFQs.",
+            )
+            target_user = await db.users.find_one({"user_id": target_user_id}, {"_id": 0})
+            if target_user:
+                body = f"""<p>Dear {target_user['name']},</p>
+                <p>Your vendor profile on Renergizr has been <strong style="color:#10b981">verified</strong>!</p>
+                <p>You now have full marketplace access and can bid on all open RFQs. Your CCTS certification status is visible to buyers.</p>"""
+                await send_email_notification(target_user["email"], "Vendor Profile Verified - Renergizr", email_base_html("Profile Verified!", body))
+        elif status == "rejected":
+            await create_notification(
+                target_user_id, "vendor_rejected", "Verification Update",
+                "Your vendor profile verification requires additional documentation. Please update your compliance documents.",
+            )
     return {"message": "User updated"}
 
 @api_router.get("/admin/vendors")
@@ -611,6 +1014,8 @@ async def admin_analytics(request: Request):
     open_rfqs = await db.rfqs.count_documents({"status": "open"})
     awarded_rfqs = await db.rfqs.count_documents({"status": "awarded"})
     total_bids = await db.bids.count_documents({})
+    total_contracts = await db.contracts.count_documents({})
+    active_contracts = await db.contracts.count_documents({"status": "active"})
     pending_vendors = await db.vendor_profiles.count_documents({"verification_status": "pending"})
     verified_vendors = await db.vendor_profiles.count_documents({"verification_status": "verified"})
     return {
@@ -621,6 +1026,8 @@ async def admin_analytics(request: Request):
         "open_rfqs": open_rfqs,
         "awarded_rfqs": awarded_rfqs,
         "total_bids": total_bids,
+        "total_contracts": total_contracts,
+        "active_contracts": active_contracts,
         "pending_vendors": pending_vendors,
         "verified_vendors": verified_vendors
     }
@@ -633,9 +1040,18 @@ async def admin_list_rfqs(request: Request):
     rfqs = await db.rfqs.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
     return rfqs
 
+@api_router.get("/admin/contracts")
+async def admin_list_contracts(request: Request):
+    user = await get_current_user(request)
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    contracts = await db.contracts.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return contracts
+
+# ---- MARKET INSIGHTS ----
+
 @api_router.get("/market/insights")
 async def market_insights(request: Request):
-    """Returns simulated real-time energy market data and carbon credit prices (public endpoint)"""
     return {
         "energy_prices": [
             {"type": "Solar", "price": 2.85, "change": 0.05, "change_pct": 1.79, "unit": "₹/kWh", "trend": "up"},
@@ -671,19 +1087,6 @@ async def market_insights(request: Request):
             {"month": "Jan", "solar": 2.85, "wind": 3.12, "carbon": 245},
         ]
     }
-
-@api_router.get("/notifications")
-async def get_notifications(request: Request):
-    user = await get_current_user(request)
-    notifs = await db.notifications.find({"user_id": user["user_id"]}, {"_id": 0}).sort("created_at", -1).to_list(20)
-    unread = await db.notifications.count_documents({"user_id": user["user_id"], "read": False})
-    return {"notifications": notifs, "unread_count": unread}
-
-@api_router.patch("/notifications/{notif_id}/read")
-async def mark_notification_read(notif_id: str, request: Request):
-    user = await get_current_user(request)
-    await db.notifications.update_one({"notif_id": notif_id, "user_id": user["user_id"]}, {"$set": {"read": True}})
-    return {"message": "Marked as read"}
 
 app.include_router(api_router)
 app.add_middleware(
