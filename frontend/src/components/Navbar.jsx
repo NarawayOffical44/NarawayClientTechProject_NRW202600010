@@ -73,7 +73,14 @@ export default function Navbar() {
         </div>
 
         {/* User Menu */}
-        <div className="relative ml-auto">
+        <div className="relative ml-auto flex items-center gap-2">
+          {/* Notification Bell */}
+          <button data-testid="notification-bell" className="relative w-8 h-8 flex items-center justify-center rounded-sm text-slate-400 hover:text-white hover:bg-[#1E293B] transition-colors">
+            <Bell size={15} strokeWidth={1.5} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-sky-500 rounded-full" />
+            )}
+          </button>
           <button
             data-testid="user-menu-btn"
             onClick={() => setDropOpen(!dropOpen)}
