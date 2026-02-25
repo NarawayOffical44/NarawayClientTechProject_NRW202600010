@@ -5,9 +5,10 @@ Build a B2B energy trading marketplace for Renergizr Industries Private Limited 
 
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Recharts (dark industrial theme)
-- **Backend**: FastAPI + MongoDB (motor async driver)
+- **Backend 1 (Python)**: FastAPI + MongoDB, port 8001, handles `/api/*` routes
+- **Backend 2 (Node.js)**: Express.js + MongoDB, port 8002, handles `/api/v2/*` (proxied via Python)
 - **Auth**: JWT sessions (email/password) + Emergent Google OAuth
-- **AI Engine**: Gemini 2.0 Flash via emergentintegrations (bid ranking + gap analysis)
+- **AI Engine**: Gemini 2.0 Flash via emergentintegrations (Python) / Emergent proxy (Node.js)
 - **Email**: Resend (configured, requires RESEND_API_KEY in backend/.env)
 - **Design**: Dark navy (#020617) + Sky blue (#0EA5E9) accent + Chivo/Inter fonts
 
