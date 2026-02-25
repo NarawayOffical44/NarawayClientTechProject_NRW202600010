@@ -1120,6 +1120,45 @@ async def download_prd(format: str = "html"):
             content = f.read()
         return HTMLResponse(content=content)
 
+# ---- NODE.JS BACKEND PROXY ----
+# All /api/v2/* requests are proxied to the Node.js Express backend on port 8002.
+NODE_BACKEND = "http://localhost:8002"
+
+@app.api_route("/api/v2/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+async def proxy_to_node(path: str, request: Request):
+    """Transparent proxy to the Node.js backend. Preserves headers, body, and cookies."""
+    url = f"{NODE_BACKEND}/{path}"
+    if request.query_params:
+        url += f"?{request.query_params}"
+
+    headers = dict(request.headers)
+    headers.pop("host", None)
+    headers.pop("content-length", None)
+
+    body = await request.body()
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            resp = await client.request(
+                method=request.method,
+                url=url,
+                headers=headers,
+                content=body,
+            )
+            # Forward response headers (excluding problematic ones)
+            resp_headers = {
+                k: v for k, v in resp.headers.items()
+                if k.lower() not in ["transfer-encoding", "content-encoding", "connection"]
+            }
+            return Response(
+                content=resp.content,
+                status_code=resp.status_code,
+                headers=resp_headers,
+                media_type=resp.headers.get("content-type", "application/json"),
+            )
+        except httpx.ConnectError:
+            raise HTTPException(status_code=503, detail="Node.js backend unavailable")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     mongo_client.close()
