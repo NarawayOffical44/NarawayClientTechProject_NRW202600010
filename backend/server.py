@@ -598,7 +598,7 @@ Respond ONLY with valid JSON in exactly this format:
             api_key=os.environ.get("EMERGENT_LLM_KEY"),
             session_id=f"ai_rank_{rfq_id}_{uuid.uuid4().hex[:8]}",
             system_message="You are an expert energy procurement analyst. Always respond with valid JSON only, no markdown."
-        ).with_model("gemini", "gemini-2.0-flash")
+        ).with_model("anthropic", "claude-haiku-4-5-20251001")
 
         response_text = await chat.send_message(UserMessage(text=prompt))
 
@@ -1087,6 +1087,99 @@ async def market_insights(request: Request):
             {"month": "Jan", "solar": 2.85, "wind": 3.12, "carbon": 245},
         ]
     }
+
+# ---- GRID MONITORING — Scope MOU 1.1.f ----
+# "5G/6G low-latency communication architecture for real-time grid balancing"
+# Frontend polls this every 2 seconds to simulate a low-latency 5G/6G telemetry stream.
+# Production: replace simulation with SCADA / NLDC API via 5G/6G edge gateway.
+
+@api_router.get("/grid/status")
+async def get_grid_status(request: Request):
+    """
+    Real-time grid balancing data for the GridMonitor admin dashboard.
+    Simulates: frequency, voltage, renewable mix, regional load, latency, events.
+    """
+    import random
+
+    freq     = round(50.0 + random.uniform(-0.20, 0.20), 4)   # India nominal: 50.0 Hz
+    latency  = round(random.uniform(0.28, 0.95), 3)            # 5G/6G target: <1 ms
+    voltage  = round(220.0 + random.uniform(-3.0, 3.0), 2)     # 220 kV nominal
+
+    # Grid stability derived from frequency deviation from 50 Hz
+    deviation = abs(freq - 50.0)
+    if   deviation < 0.10: stability = "stable"
+    elif deviation < 0.25: stability = "warning"
+    else:                  stability = "critical"
+
+    # Renewable energy mix (must sum to 100)
+    solar   = random.randint(33, 48)
+    wind    = random.randint(24, 34)
+    hydro   = random.randint(9, 16)
+    thermal = 100 - solar - wind - hydro
+
+    active_nodes = random.randint(120, 138)   # connected 5G/6G edge nodes
+    total_load   = random.randint(4100, 4900) # MW
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    events = [
+        {"timestamp": now, "severity": "info",
+         "message": f"Grid frequency: {freq} Hz — {'nominal' if stability == 'stable' else 'deviation detected, balancing active'}"},
+        {"timestamp": now, "severity": "action",
+         "message": f"5G/6G sync: {active_nodes} edge nodes balanced across regional grid"},
+        {"timestamp": now, "severity": "info",
+         "message": f"Renewable mix: Solar {solar}%, Wind {wind}%, Hydro {hydro}%, Thermal {thermal}%"},
+    ]
+    if stability != "stable":
+        events.insert(0, {"timestamp": now, "severity": "warning",
+                          "message": f"Frequency deviation {freq:.3f} Hz — auto-balancing engaged via 5G control plane"})
+
+    regions = [
+        {"name": "North India", "load_mw": random.randint(1200, 1600), "load_pct": random.randint(58, 88), "nodes": random.randint(38, 46)},
+        {"name": "South India", "load_mw": random.randint(1000, 1400), "load_pct": random.randint(52, 82), "nodes": random.randint(30, 40)},
+        {"name": "West India",  "load_mw": random.randint(900,  1200), "load_pct": random.randint(48, 78), "nodes": random.randint(26, 36)},
+        {"name": "East India",  "load_mw": random.randint(700,  1000), "load_pct": random.randint(44, 74), "nodes": random.randint(22, 30)},
+    ]
+
+    return {
+        "frequency_hz":    freq,
+        "voltage_kv":      voltage,
+        "total_load_mw":   total_load,
+        "grid_stability":  stability,
+        "latency_ms":      latency,
+        "active_nodes":    active_nodes,
+        "renewable_mix":   {"solar": solar, "wind": wind, "hydro": hydro, "thermal": thermal},
+        "events":          events,
+        "regions":         regions,
+        "timestamp":       now,
+    }
+
+
+# ---- CONTACT FORM — Scope MOU 1.1.i (Static company website) ----
+# Stores contact enquiries from the Landing page contact form.
+
+class ContactMessage(BaseModel):
+    name:    str
+    email:   str
+    company: Optional[str] = None
+    message: str
+
+@api_router.post("/contact")
+async def submit_contact(msg: ContactMessage):
+    """Saves a contact form submission from the public Landing page."""
+    doc = {
+        "contact_id": generate_id("cnt_"),
+        "name":       msg.name,
+        "email":      msg.email,
+        "company":    msg.company,
+        "message":    msg.message,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status":     "new",
+    }
+    await db.contacts.insert_one(doc)
+    logger.info(f"Contact form submission from {msg.email}")
+    return {"success": True, "message": "Thank you! We will be in touch shortly."}
+
 
 app.include_router(api_router)
 app.add_middleware(

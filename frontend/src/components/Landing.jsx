@@ -1,7 +1,36 @@
+/**
+ * Landing.jsx — Public marketing/company website (MOU Scope 1.1.i)
+ *
+ * This is the static company parent website for Renergizr Industries.
+ * It is publicly accessible (no auth required) and serves as the SEO entry point.
+ *
+ * Sections:
+ *   Navbar       — scroll-aware, mobile hamburger menu
+ *   Ticker       — live energy market prices (simulated)
+ *   Hero         — headline + CTA buttons
+ *   About        — company story and investment
+ *   Features     — 6-feature bento grid (scope items a-g visualised)
+ *   HowItWorks   — 3-step process
+ *   CarbonCredits— CCTS/CBAM compliance section
+ *   Clients/Vendors — role-specific benefit sections
+ *   News         — energy sector news links
+ *   Compliance   — regulatory badges (CCTS, MNRE, CEA, CBAM, ISO 14001)
+ *   CTA          — final conversion section
+ *   Contact      — form connected to POST /api/contact
+ *   Footer       — links and copyright
+ *
+ * SEO (Scope 1.1.h):
+ *   - Meta tags in public/index.html (title, description, OG, Twitter)
+ *   - robots.txt and sitemap.xml in public/
+ *   - JSON-LD Organization schema injected via useEffect
+ *   - Semantic HTML sections with descriptive headings
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Zap, BarChart3, Shield, Globe, ChevronRight, Menu, X, ArrowRight, TrendingUp, TrendingDown, Leaf, FileCheck, Bot, Award, ArrowUpRight, ExternalLink } from 'lucide-react';
-import { useAuth } from '../App';
+import { useAuth, API } from '../App';
 
 const TICKER_ITEMS = [
   { label: 'Solar', value: '₹2.85/kWh', change: '+1.79%', up: true },
@@ -15,7 +44,7 @@ const TICKER_ITEMS = [
 
 const FEATURES = [
   { icon: <FileCheck size={20} strokeWidth={1.5} />, color: 'text-sky-400', bg: 'bg-sky-500/10', title: 'RFQ Tendering Engine', desc: 'Post structured energy requirements with full technical, logistics, and financial specifications. Get competitive bids within 48 hours.' },
-  { icon: <Bot size={20} strokeWidth={1.5} />, color: 'text-violet-400', bg: 'bg-violet-500/10', title: 'AI Bid Ranking', desc: 'Gemini-powered analysis scores every bid against your requirements — price, compliance, capacity, timeline — and surfaces the best match.' },
+  { icon: <Bot size={20} strokeWidth={1.5} />, color: 'text-violet-400', bg: 'bg-violet-500/10', title: 'AI Bid Ranking', desc: 'Claude AI-powered analysis scores every bid against your requirements — price, compliance, capacity, timeline — and surfaces the best match with gap analysis.' },
   { icon: <Shield size={20} strokeWidth={1.5} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', title: 'Vendor Verification', desc: 'Every vendor is verified for MNRE registration, CEA licensing, green certifications, and CCTS carbon credit compliance.' },
   { icon: <Leaf size={20} strokeWidth={1.5} />, color: 'text-amber-400', bg: 'bg-amber-500/10', title: 'Carbon Credit Tracking', desc: 'Integrated CCTS-compliant carbon credit verification. Track tCO2e balances, certifications, and offset capabilities for every vendor.' },
   { icon: <BarChart3 size={20} strokeWidth={1.5} />, color: 'text-rose-400', bg: 'bg-rose-500/10', title: 'Market Intelligence', desc: 'Real-time energy price indices, carbon market data, and bid gap analysis to help you make data-backed procurement decisions.' },
@@ -116,6 +145,45 @@ export default function Landing() {
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // ── Contact form state (Scope 1.1.i — company website contact)
+  const [contact, setContact] = useState({ name: '', email: '', company: '', message: '' });
+  const [contactStatus, setContactStatus] = useState('idle'); // 'idle' | 'sending' | 'success' | 'error'
+
+  // ── JSON-LD Organisation schema (SEO — Scope 1.1.h)
+  // Injected into <head> so search engines can understand the company entity.
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Renergizr Industries Private Limited',
+      description: "India's first AI-powered B2B energy trading marketplace connecting industrial energy buyers with CCTS-verified vendors",
+      url: 'https://renergizr.in',
+      foundingDate: '2025',
+      areaServed: 'IN',
+      industry: 'Energy Technology',
+      serviceType: ['B2B Energy Trading', 'RFQ Marketplace', 'AI Bid Ranking', 'Carbon Credit Tracking', 'CBAM Compliance'],
+      contactPoint: { '@type': 'ContactPoint', email: 'contact@renergizr.com', contactType: 'customer support' },
+    });
+    document.head.appendChild(script);
+    return () => { try { document.head.removeChild(script); } catch {} };
+  }, []);
+
+  // ── Contact form submit handler — calls POST /api/contact
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    if (!contact.name || !contact.email || !contact.message) return;
+    setContactStatus('sending');
+    try {
+      await axios.post(`${API}/contact`, contact);
+      setContactStatus('success');
+      setContact({ name: '', email: '', company: '', message: '' });
+    } catch {
+      setContactStatus('error');
+    }
+  };
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -514,10 +582,11 @@ export default function Landing() {
                 <div><span className="text-slate-600">Location:</span> Mumbai, India</div>
               </div>
             </div>
-            <div className="bg-[#020617] border border-[#1E293B] rounded-sm p-6">
+            <form onSubmit={handleContactSubmit} className="bg-[#020617] border border-[#1E293B] rounded-sm p-6">
               <div className="space-y-3">
-                <input data-testid="contact-name" type="text" placeholder="Name" className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
-                <input data-testid="contact-email" type="email" placeholder="Work Email" className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
+                <input data-testid="contact-name" type="text" placeholder="Name" required value={contact.name} onChange={e => setContact(p => ({...p, name: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
+                <input data-testid="contact-email" type="email" placeholder="Work Email" required value={contact.email} onChange={e => setContact(p => ({...p, email: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
+                <input type="text" placeholder="Company (optional)" value={contact.company} onChange={e => setContact(p => ({...p, company: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
                 <select className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-slate-400 px-4 py-3 rounded-sm text-sm outline-none transition-colors">
                   <option>Interested in...</option>
                   <option>Energy Buyer — Post RFQs</option>
@@ -526,10 +595,14 @@ export default function Landing() {
                   <option>Enterprise Plan</option>
                   <option>Carbon Credits Integration</option>
                 </select>
-                <textarea data-testid="contact-message" rows={3} placeholder="Message" className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors resize-none" />
-                <button data-testid="contact-submit" className="w-full bg-sky-500 hover:bg-sky-600 text-white py-3 rounded-sm font-bold text-sm transition-colors">Send Message</button>
+                <textarea data-testid="contact-message" rows={3} placeholder="Message" required value={contact.message} onChange={e => setContact(p => ({...p, message: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors resize-none" />
+                {contactStatus === 'success' && <p className="text-emerald-400 text-xs font-semibold">Message sent! We'll be in touch shortly.</p>}
+                {contactStatus === 'error'   && <p className="text-red-400 text-xs">Something went wrong. Please email us directly.</p>}
+                <button data-testid="contact-submit" type="submit" disabled={contactStatus === 'sending'} className="w-full bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white py-3 rounded-sm font-bold text-sm transition-colors">
+                  {contactStatus === 'sending' ? 'Sending...' : 'Send Message'}
+                </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </section>
