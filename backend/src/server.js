@@ -49,7 +49,7 @@ const app = express();
 app.use(helmet({ contentSecurityPolicy: false }));
 
 // CORS — allow React dev server + production domain
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000' || 'http://localhost:3001').split(',').map(s => s.trim());
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,https://narawayclienttechproject-nrw202600010.onrender.com').split(',').map(s => s.trim());
 app.use(cors({
   origin:      (origin, cb) => {
     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);

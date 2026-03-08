@@ -22,7 +22,7 @@ const { generateId, asyncHandler, sendError } = require('../utils/helpers');
 const { requireAuth } = require('../middleware/auth');
 
 const COOKIE_NAME = process.env.COOKIE_NAME || 'session_token';
-const JWT_SECRET  = process.env.JWT_SECRET;
+const JWT_SECRET  = process.env.JWT_SECRET || 'your-strong-random-secret-here-change-in-production';
 const COOKIE_OPTS = {
   httpOnly:  true,
   sameSite:  'lax',
