@@ -16,7 +16,7 @@ const axios = require('axios');
 const logger = require('./logger');
 
 // Groq API endpoint and model
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const AI_MODEL = 'mixtral-8x7b-32768';
 
