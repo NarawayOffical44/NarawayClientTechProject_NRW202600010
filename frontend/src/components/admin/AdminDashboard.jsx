@@ -1,11 +1,27 @@
+/**
+ * AdminDashboard.jsx — Platform admin oversight (MOU Scope 1.1.e)
+ *
+ * Tabs:
+ *   Overview — platform KPIs, energy + carbon charts, vendor verification breakdown
+ *   Users    — role management, activate/deactivate
+ *   Vendors  — CCTS verification workflow (verify / reject)
+ *   RFQs     — all platform RFQs with status
+ *   Grid     — 5G/6G real-time grid balancing monitor (MOU Scope 1.1.f)
+ *
+ * All data fetched in parallel via Promise.all on mount.
+ * Only admin-role users can access this page (enforced by ProtectedRoute in App.js).
+ */
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Users, FileText, TrendingUp, Shield, CheckCircle, XCircle, Clock, BarChart3, Leaf, Globe } from 'lucide-react';
+import { Users, FileText, TrendingUp, Shield, CheckCircle, XCircle, Clock, BarChart3, Leaf, Globe, Radio } from 'lucide-react';
 import Navbar from '../Navbar';
 import { API } from '../../App';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import GridMonitor from './GridMonitor';  // MOU Scope 1.1.f — 5G/6G grid balancing
 
-const TABS = ['Overview', 'Users', 'Vendors', 'RFQs'];
+// Tab labels — Grid is the scope 1.1.f addition
+const TABS = ['Overview', 'Users', 'Vendors', 'RFQs', 'Grid'];
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('Overview');
@@ -85,8 +101,10 @@ export default function AdminDashboard() {
               key={t}
               data-testid={`admin-tab-${t.toLowerCase()}`}
               onClick={() => setTab(t)}
-              className={`px-4 py-2 text-sm font-medium rounded-sm transition-colors duration-200 ${t === tab ? 'bg-sky-500 text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`px-4 py-2 text-sm font-medium rounded-sm transition-colors duration-200 flex items-center gap-1.5 ${t === tab ? 'bg-sky-500 text-white' : 'text-slate-400 hover:text-white'}`}
             >
+              {/* Grid tab gets a live-indicator dot to signal real-time data */}
+              {t === 'Grid' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
               {t}
             </button>
           ))}
@@ -291,6 +309,9 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {/* ── Grid Monitor Tab (Scope 1.1.f — 5G/6G real-time grid balancing) ── */}
+            {tab === 'Grid' && <GridMonitor />}
 
             {tab === 'RFQs' && (
               <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm">
