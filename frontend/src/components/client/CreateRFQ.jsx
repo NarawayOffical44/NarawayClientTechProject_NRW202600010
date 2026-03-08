@@ -27,6 +27,7 @@ export default function CreateRFQ() {
     delivery_location: '', start_date: '', end_date: '',
     price_ceiling: '', payment_terms: '', advance_percent: '',
     add_on_services: [],
+    carbon_credits_tco2e: '',
   });
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -53,6 +54,7 @@ export default function CreateRFQ() {
         specs: { voltage_kv: form.voltage_kv, phase: form.phase },
         financial_terms: { payment_terms: form.payment_terms, advance_percent: form.advance_percent },
         add_on_services: form.add_on_services,
+        carbon_credits_tco2e: form.carbon_credits_tco2e ? parseFloat(form.carbon_credits_tco2e) : null,
       };
       const res = await axios.post(`${API}/rfqs`, payload, { withCredentials: true });
       navigate(`/client/rfqs/${res.data.rfq_id}`);
@@ -282,6 +284,19 @@ export default function CreateRFQ() {
                   className="w-full bg-[#020617] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors"
                 />
               </div>
+              {form.add_on_services.includes('Carbon Credits') && (
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-2 block">Carbon Credits (tCO₂e) - Optional</label>
+                  <input
+                    type="number"
+                    value={form.carbon_credits_tco2e}
+                    onChange={e => upd('carbon_credits_tco2e', e.target.value)}
+                    placeholder="e.g. 500 (metric tonnes CO2 equivalent)"
+                    className="w-full bg-[#020617] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors"
+                  />
+                  <p className="text-xs text-slate-600 mt-1">Specify carbon credits to be bundled with this energy deal (CCTS certified)</p>
+                </div>
+              )}
               <div className="bg-[#1E293B]/50 rounded-sm p-4">
                 <h3 className="text-sm font-semibold text-white mb-3">Review Summary</h3>
                 <div className="space-y-2 text-xs text-slate-400">

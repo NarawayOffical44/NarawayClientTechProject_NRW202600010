@@ -10,6 +10,7 @@
  * GET    /api/rfqs/:rfq_id/bids          — List bids for RFQ
  * POST   /api/rfqs/:rfq_id/bids          — Submit a bid (vendor only)
  * POST   /api/rfqs/:rfq_id/bids/rank     — AI rank bids (client only, Scope 1.1.b)
+ * GET    /api/rfqs/:rfq_id/bids/comparison — Vendor comparison table (client only)
  * PATCH  /api/bids/:bid_id/shortlist     — Toggle shortlist (client only)
  */
 
@@ -23,7 +24,7 @@ const VendorProfile = require('../models/VendorProfile');
 const Notification  = require('../models/Notification');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { generateId, asyncHandler, sendError } = require('../utils/helpers');
-const { rankBids } = require('../utils/ai');
+const { rankBids, calculateComplianceScore, calculateDistanceFeasibility, calculateVendorReliability } = require('../utils/ai');
 const { sendNewBid, sendContractAwarded } = require('../utils/email');
 
 // ── Helper: create a notification in the DB ────────────────────────────────
@@ -192,6 +193,9 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
     vendor_id:       req.user.user_id,
     vendor_name:     req.user.name,
     vendor_company:  vp?.company_name || req.user.name,
+    vendor_certifications:    vp?.certifications || [],
+    vendor_carbon_credits:    vp?.carbon_credits_ccts || 0,
+    vendor_verification_status: vp?.verification_status || 'pending',
     ...req.body,
     status: 'submitted',
   });
@@ -217,11 +221,24 @@ router.post('/:rfq_id/bids/rank', requireAuth, requireRole('client'), asyncHandl
 
   const aiResult = await rankBids(rfq, bids);
 
-  // Persist AI scores to each bid
+  // Persist AI scores and calculated metrics to each bid
   for (const ranking of aiResult.rankings || []) {
+    const bid = bids.find(b => b.bid_id === ranking.bid_id);
+    if (!bid) continue;
+
+    const complianceScore = calculateComplianceScore(bid.vendor_certifications, bid.vendor_verification_status);
+    const distanceFeasibility = calculateDistanceFeasibility();
+    const vendorReliability = calculateVendorReliability();
+
     await Bid.updateOne(
       { bid_id: ranking.bid_id },
-      { $set: { ai_score: ranking.score, ai_analysis: { strengths: ranking.strengths, gaps: ranking.gaps, recommendation: ranking.recommendation } } }
+      { $set: {
+        ai_score: ranking.score,
+        ai_analysis: { strengths: ranking.strengths, gaps: ranking.gaps, recommendation: ranking.recommendation },
+        compliance_score: complianceScore,
+        distance_feasibility: distanceFeasibility,
+        vendor_reliability: vendorReliability
+      }}
     );
   }
 
@@ -243,6 +260,47 @@ router.patch('/bids/:bid_id/shortlist', requireAuth, requireRole('client'), asyn
   }
 
   return res.json(bid);
+}));
+
+// GET /api/rfqs/:rfq_id/bids/comparison — Vendor comparison (all bids side-by-side)
+router.get('/:rfq_id/bids/comparison', requireAuth, requireRole('client'), asyncHandler(async (req, res) => {
+  const rfq = await RFQ.findOne({ rfq_id: req.params.rfq_id }).lean();
+  if (!rfq) return sendError(res, 404, 'RFQ not found');
+  if (rfq.client_id !== req.user.user_id && req.user.role !== 'admin')
+    return sendError(res, 403, 'Not your RFQ');
+
+  const bids = await Bid.find({ rfq_id: req.params.rfq_id }).sort({ price_per_unit: 1 }).lean();
+
+  if (!bids.length) return res.json({ rfq, bids: [], summary: null });
+
+  // Build comparison data
+  const comparison = bids.map(b => ({
+    bid_id: b.bid_id,
+    vendor_name: b.vendor_name,
+    vendor_company: b.vendor_company,
+    price_per_unit: b.price_per_unit,
+    quantity_mw: b.quantity_mw,
+    delivery_timeline: b.delivery_timeline,
+    notes: b.notes,
+    ai_score: b.ai_score || null,
+    ai_analysis: b.ai_analysis || null,
+    status: b.status,
+    is_shortlisted: b.is_shortlisted,
+    createdAt: b.createdAt,
+  }));
+
+  // Calculate summary metrics
+  const prices = bids.map(b => b.price_per_unit);
+  const summary = {
+    total_bids: bids.length,
+    shortlisted_count: bids.filter(b => b.is_shortlisted).length,
+    min_price: Math.min(...prices),
+    max_price: Math.max(...prices),
+    avg_price: (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2),
+    rfq_price_ceiling: rfq.price_ceiling,
+  };
+
+  return res.json({ rfq, comparison, summary });
 }));
 
 module.exports = router;

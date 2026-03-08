@@ -22,7 +22,7 @@ const { generateId, asyncHandler, sendError } = require('../utils/helpers');
 const { requireAuth } = require('../middleware/auth');
 
 const COOKIE_NAME = process.env.COOKIE_NAME || 'session_token';
-const JWT_SECRET  = process.env.JWT_SECRET || 'ghgfjgkgukgkuukhkh';
+const JWT_SECRET  = process.env.JWT_SECRET;
 const COOKIE_OPTS = {
   httpOnly:  true,
   sameSite:  'lax',
@@ -77,46 +77,22 @@ function safeUser(user) {
 // }));
 
 router.post('/register', asyncHandler(async (req, res) => {
-
-  console.log("----- REGISTER REQUEST START -----");
-  console.log("Request Body:", req.body);
-
   const { name, email, password, role = 'client', company = '' } = req.body;
 
-  // Validate required fields
   if (!name || !email || !password) {
-    console.log("❌ Missing required fields");
     return sendError(res, 400, 'name, email and password are required');
   }
 
-  console.log("✅ Required fields present");
-
-  // Validate role
   if (!['client', 'vendor'].includes(role)) {
-    console.log("❌ Invalid role:", role);
     return sendError(res, 400, 'role must be client or vendor');
   }
 
-  console.log("✅ Role valid:", role);
-
-  // Check if user already exists
-  console.log("🔍 Checking if user already exists...");
-
   const existing = await User.findOne({ email: email.toLowerCase() });
-
   if (existing) {
-    console.log("❌ User already exists with email:", email);
     return sendError(res, 400, 'Email already registered');
   }
 
-  console.log("✅ Email is unique");
-
-  // Hash password
-  console.log("🔐 Hashing password...");
   const hashed = await bcrypt.hash(password, 12);
-
-  // Create user
-  console.log("👤 Creating user...");
 
   const user = await User.create({
     user_id: generateId('usr_'),
@@ -127,36 +103,20 @@ router.post('/register', asyncHandler(async (req, res) => {
     company,
   });
 
-  console.log("✅ User created:", user.user_id);
-
-  // Create vendor profile if vendor
   if (role === 'vendor') {
-    console.log("🏢 Creating vendor profile...");
-
     await VendorProfile.create({
       vendor_id: generateId('vnd_'),
       user_id: user.user_id,
       company_name: company || name,
     });
-
-    console.log("✅ Vendor profile created");
   }
 
-  // Generate token
-  console.log("🔑 Generating JWT token...");
   const token = signToken(user);
-
-  // Set cookie
   res.cookie(COOKIE_NAME, token, COOKIE_OPTS);
-
-  console.log("🍪 Cookie set");
-
-  console.log("----- REGISTER SUCCESS -----");
 
   return res.status(201).json({
     user: safeUser(user)
   });
-
 }));
 // POST /api/auth/login
 router.post('/login', asyncHandler(async (req, res) => {
@@ -188,6 +148,32 @@ router.post('/logout', (req, res) => {
   res.clearCookie(COOKIE_NAME);
   return res.json({ success: true });
 });
+
+// POST /api/auth/change-password — Change user password (admin settings)
+router.post('/change-password', requireAuth, asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return sendError(res, 400, 'Current and new password are required');
+  }
+
+  if (newPassword.length < 8) {
+    return sendError(res, 400, 'Password must be at least 8 characters');
+  }
+
+  const user = await User.findOne({ user_id: req.user.user_id });
+  if (!user) return sendError(res, 404, 'User not found');
+
+  // Verify current password
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) return sendError(res, 401, 'Current password is incorrect');
+
+  // Hash and update new password
+  const hashed = await bcrypt.hash(newPassword, 12);
+  await User.updateOne({ user_id: req.user.user_id }, { password: hashed });
+
+  return res.json({ success: true, message: 'Password changed successfully' });
+}));
 
 // POST /api/auth/google/session — Emergent Google OAuth callback
 // Emergent returns a session_id in the URL fragment; frontend posts it here.

@@ -3,10 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   ArrowLeft, Zap, Bot, TrendingUp, CheckCircle, XCircle, Star, AlertTriangle,
-  BarChart3, Lock, Trophy, ChevronDown, ChevronUp, FileSignature, Clock, Bookmark
+  BarChart3, Lock, Trophy, ChevronDown, ChevronUp, FileSignature, Clock, Bookmark, Grid3X3
 } from 'lucide-react';
 import Navbar from '../Navbar';
 import { API } from '../../App';
+import BidComparisonTable from './BidComparisonTable';
+import GapAnalysis from './GapAnalysis';
+import BidMetrics from './BidMetrics';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine } from 'recharts';
 
 const STATUS_STYLES = {
@@ -122,6 +125,9 @@ export default function RFQDetail() {
   const [selectedBid, setSelectedBid] = useState(null);
   const [awardBid, setAwardBid] = useState(null);
   const [actionLoading, setActionLoading] = useState({});
+  const [showComparison, setShowComparison] = useState(false);
+  const [comparisonData, setComparisonData] = useState(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -190,6 +196,20 @@ export default function RFQDetail() {
       fetchData();
     } catch (err) {
       alert(err.response?.data?.detail || 'Failed to award contract');
+    }
+  };
+
+  const fetchComparison = async () => {
+    setComparisonLoading(true);
+    try {
+      const res = await axios.get(`${API}/rfqs/${rfq_id}/bids/comparison`, { withCredentials: true });
+      setComparisonData(res.data);
+      setShowComparison(true);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load comparison');
+    } finally {
+      setComparisonLoading(false);
     }
   };
 
@@ -312,6 +332,13 @@ export default function RFQDetail() {
                     </div>
                   </div>
                 )}
+                {rfq.carbon_credits_tco2e && (
+                  <div>
+                    <div className="text-slate-500 text-xs mb-1">Carbon Credits</div>
+                    <div className="text-white font-medium font-['JetBrains_Mono',monospace]">{rfq.carbon_credits_tco2e} tCO₂e</div>
+                    <div className="text-xs text-slate-600 mt-0.5">CCTS Certified</div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -377,19 +404,31 @@ export default function RFQDetail() {
             <div className="flex items-center justify-between">
               <h2 className="font-['Chivo'] font-bold text-lg text-white">Bids ({bids.length})</h2>
               {bids.length > 0 && rfq.status !== 'awarded' && rfq.status !== 'completed' && (
-                <button
-                  data-testid="ai-rank-btn"
-                  onClick={runAIRanking}
-                  disabled={aiLoading}
-                  className="flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 px-4 py-2 rounded-sm text-xs font-semibold transition-colors"
-                >
-                  {aiLoading ? <div className="w-3 h-3 border border-sky-400 border-t-transparent rounded-full animate-spin" /> : <Bot size={14} />}
-                  {aiLoading ? 'Analyzing...' : 'AI Rank'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => showComparison ? setShowComparison(false) : fetchComparison()}
+                    disabled={comparisonLoading}
+                    className="flex items-center gap-2 bg-slate-500/10 hover:bg-slate-500/20 border border-slate-500/30 text-slate-400 px-4 py-2 rounded-sm text-xs font-semibold transition-colors"
+                  >
+                    {comparisonLoading ? <div className="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin" /> : <Grid3X3 size={14} />}
+                    {showComparison ? 'Individual View' : 'Comparison'}
+                  </button>
+                  <button
+                    data-testid="ai-rank-btn"
+                    onClick={runAIRanking}
+                    disabled={aiLoading}
+                    className="flex items-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 px-4 py-2 rounded-sm text-xs font-semibold transition-colors"
+                  >
+                    {aiLoading ? <div className="w-3 h-3 border border-sky-400 border-t-transparent rounded-full animate-spin" /> : <Bot size={14} />}
+                    {aiLoading ? 'Analyzing...' : 'AI Rank'}
+                  </button>
+                </div>
               )}
             </div>
 
-            {bids.length === 0 ? (
+            {showComparison && comparisonData ? (
+              <BidComparisonTable comparison={comparisonData.comparison} summary={comparisonData.summary} />
+            ) : bids.length === 0 ? (
               <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm py-12 text-center">
                 <TrendingUp size={28} strokeWidth={1} className="text-slate-700 mx-auto mb-3" />
                 <p className="text-slate-500 text-sm">No bids received yet.</p>
@@ -458,28 +497,9 @@ export default function RFQDetail() {
                         </div>
                         {bid.notes && <div className="text-xs"><span className="text-slate-500">Notes: </span><span className="text-slate-400">{bid.notes}</span></div>}
 
-                        {bid.ai_analysis && (
-                          <div className="space-y-3">
-                            {bid.ai_analysis.strengths?.length > 0 && (
-                              <div>
-                                <div className="text-xs text-emerald-400 font-semibold mb-1.5 flex items-center gap-1"><CheckCircle size={10} /> Strengths</div>
-                                <ul className="space-y-1">{bid.ai_analysis.strengths.map((s, i) => <li key={i} className="text-xs text-slate-400">• {s}</li>)}</ul>
-                              </div>
-                            )}
-                            {bid.ai_analysis.gaps?.length > 0 && (
-                              <div>
-                                <div className="text-xs text-amber-400 font-semibold mb-1.5 flex items-center gap-1"><AlertTriangle size={10} /> Gaps</div>
-                                <ul className="space-y-1">{bid.ai_analysis.gaps.map((g, i) => <li key={i} className="text-xs text-slate-400">• {g}</li>)}</ul>
-                              </div>
-                            )}
-                            {bid.ai_analysis.recommendation && (
-                              <div className="bg-sky-500/5 border border-sky-500/10 rounded-sm p-3">
-                                <div className="text-xs text-sky-400 font-semibold mb-1 flex items-center gap-1"><Bot size={10} /> Recommendation</div>
-                                <p className="text-xs text-slate-300">{bid.ai_analysis.recommendation}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        <BidMetrics bid={bid} />
+
+                        <GapAnalysis bid={bid} rfq={rfq} />
 
                         {/* Action Buttons */}
                         {rfq.status !== 'awarded' && rfq.status !== 'completed' && bid.status !== 'rejected' && bid.status !== 'accepted' && (

@@ -44,10 +44,11 @@ const logger = require("../utils/logger");
 
 async function connectDB() {
   try {
-    const MONGO_URL =
-      "mongodb+srv://anilanita07_db_user:OMAagppkLGw8DmwR@cluster0.u33r6dj.mongodb.net/?appName=Cluster0";
+    if (!process.env.MONGO_URL) {
+      throw new Error("MONGO_URL environment variable is not set");
+    }
 
-    await mongoose.connect(MONGO_URL);
+    await mongoose.connect(process.env.MONGO_URL);
 
     logger.info("MongoDB connected → renergizr");
   } catch (err) {

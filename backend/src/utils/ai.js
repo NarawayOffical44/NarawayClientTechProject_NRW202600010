@@ -1,9 +1,9 @@
 /**
- * utils/ai.js — Claude Haiku AI integration
+ * utils/ai.js — Groq AI integration
  *
  * MOU Scope 1.1.b: "AI-driven bid ranking and gap analysis engine"
  *
- * Uses Anthropic Claude Haiku (claude-haiku-4-5-20251001) — fast, cost-efficient,
+ * Uses Groq API (mixtral-8x7b-32768) — fast, cost-efficient, open-source,
  * ideal for structured JSON analysis tasks like bid ranking.
  *
  * Developer note (Naraway team):
@@ -12,14 +12,45 @@
  *   If the AI call fails, a graceful fallback returns score=50 for all bids.
  */
 
-const Anthropic = require('@anthropic-ai/sdk');
-const logger    = require('./logger');
+const axios = require('axios');
+const logger = require('./logger');
 
-// Initialise Anthropic client — reads ANTHROPIC_API_KEY from env
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Groq API endpoint and model
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const AI_MODEL = 'mixtral-8x7b-32768';
 
-// Model to use for all AI calls (as per project-wide haiku decision)
-const AI_MODEL = 'claude-haiku-4-5-20251001';
+/**
+ * calculateComplianceScore — Vendor compliance based on certifications & verification
+ * @param {Array} certifications — List of vendor certifications
+ * @param {String} verificationStatus — 'pending', 'verified', 'rejected'
+ * @returns {Number} — Score 0-100
+ */
+function calculateComplianceScore(certifications, verificationStatus) {
+  let score = 50; // baseline
+  if (verificationStatus === 'verified') score += 25;
+  if (verificationStatus === 'rejected') score = 20;
+  if (certifications?.length > 0) score += Math.min(25, certifications.length * 5);
+  return Math.min(100, score);
+}
+
+/**
+ * calculateDistanceFeasibility — Simple distance-based feasibility (0-100)
+ * In production: use geolocation APIs to calculate actual distance
+ * @returns {Number} — Score 0-100 (random for now)
+ */
+function calculateDistanceFeasibility() {
+  return Math.floor(Math.random() * 30) + 70; // 70-100 range as placeholder
+}
+
+/**
+ * calculateVendorReliability — Vendor reliability based on history
+ * In production: track actual bid acceptance rates, contract completion
+ * @returns {Number} — Score 0-100 (random for now)
+ */
+function calculateVendorReliability() {
+  return Math.floor(Math.random() * 40) + 60; // 60-100 range as placeholder
+}
 
 /**
  * rankBids — AI-powered bid ranking and gap analysis.
@@ -70,15 +101,27 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model:      AI_MODEL,
-      max_tokens: 1024,
-      system:     'You are an expert energy procurement analyst. Always respond with valid JSON only.',
-      messages:   [{ role: 'user', content: prompt }],
-    });
+    const response = await axios.post(
+      GROQ_API_URL,
+      {
+        model: AI_MODEL,
+        messages: [
+          { role: 'system', content: 'You are an expert energy procurement analyst. Always respond with valid JSON only.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 1024,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    // Extract text content from Anthropic response
-    const raw = response.content[0]?.text || '';
+    // Extract text content from Groq response
+    const raw = response.data.choices[0]?.message?.content || '';
 
     // Strip any accidental markdown code fences
     const clean = raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
@@ -101,4 +144,9 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
   }
 }
 
-module.exports = { rankBids };
+module.exports = {
+  rankBids,
+  calculateComplianceScore,
+  calculateDistanceFeasibility,
+  calculateVendorReliability
+};

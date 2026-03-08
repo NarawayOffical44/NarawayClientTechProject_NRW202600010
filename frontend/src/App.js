@@ -15,7 +15,7 @@ import VendorRFQView from './components/vendor/VendorRFQView';
 import AdminDashboard from './components/admin/AdminDashboard';
 import ContractsPage from './components/shared/ContractsPage';
 
-const BACKEND_URL = "https://narawayclienttechproject.onrender.com";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 export const API = `${BACKEND_URL}/api`;
 
 const AuthContext = createContext(null);

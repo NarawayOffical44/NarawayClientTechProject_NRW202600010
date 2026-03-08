@@ -30,6 +30,16 @@ const bidSchema = new mongoose.Schema({
     gaps:           [{ type: String }],
     recommendation: { type: String },
   },
+
+  // Vendor profile snapshot (captured at bid time for compliance & certifications)
+  vendor_certifications:   [{ type: String }],
+  vendor_carbon_credits:   { type: Number, default: 0 },
+  vendor_verification_status: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },
+
+  // Scoring metrics (Scope 1.1.b — AI matching engine)
+  compliance_score:        { type: Number },      // 0-100, based on certifications & vendor status
+  distance_feasibility:    { type: Number },      // 0-100, based on delivery location vs vendor location
+  vendor_reliability:      { type: Number },      // 0-100, calculated from vendor history
 }, { timestamps: true });
 
 module.exports = mongoose.model('Bid', bidSchema, 'bids');

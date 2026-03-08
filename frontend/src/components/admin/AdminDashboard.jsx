@@ -21,7 +21,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import GridMonitor from './GridMonitor';  // MOU Scope 1.1.f — 5G/6G grid balancing
 
 // Tab labels — Grid is the scope 1.1.f addition
-const TABS = ['Overview', 'Users', 'Vendors', 'RFQs', 'Grid'];
+const TABS = ['Overview', 'Users', 'Vendors', 'RFQs', 'Grid', 'Settings'];
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('Overview');
@@ -31,6 +31,8 @@ export default function AdminDashboard() {
   const [rfqs, setRfqs] = useState([]);
   const [marketData, setMarketData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordMessage, setPasswordMessage] = useState('');
 
   const fetchAll = async () => {
     setLoading(true);
@@ -62,6 +64,29 @@ export default function AdminDashboard() {
       fetchAll();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordMessage('❌ Passwords do not match');
+      return;
+    }
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordMessage('❌ Password must be at least 8 characters');
+      return;
+    }
+    try {
+      const res = await axios.post(`${API}/auth/change-password`, {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      }, { withCredentials: true });
+      setPasswordMessage('✓ Password changed successfully');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => setPasswordMessage(''), 3000);
+    } catch (err) {
+      setPasswordMessage(`❌ ${err.response?.data?.error || 'Failed to change password'}`);
     }
   };
 
@@ -306,6 +331,66 @@ export default function AdminDashboard() {
                       <p className="text-slate-500 text-sm">No vendors registered yet.</p>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Settings Tab — Change Admin Credentials ── */}
+            {tab === 'Settings' && (
+              <div className="max-w-lg">
+                <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-6">
+                  <h2 className="font-['Chivo'] font-bold text-base text-white mb-4">Admin Settings</h2>
+
+                  <form onSubmit={handlePasswordChange} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Current Password</label>
+                      <input
+                        type="password"
+                        value={passwordForm.currentPassword}
+                        onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                        placeholder="Enter current password"
+                        className="w-full bg-[#0F172A] border border-[#1E293B] rounded-sm px-3 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">New Password</label>
+                      <input
+                        type="password"
+                        value={passwordForm.newPassword}
+                        onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                        placeholder="Enter new password (min 8 characters)"
+                        className="w-full bg-[#0F172A] border border-[#1E293B] rounded-sm px-3 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1.5">Confirm New Password</label>
+                      <input
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                        placeholder="Confirm new password"
+                        className="w-full bg-[#0F172A] border border-[#1E293B] rounded-sm px-3 py-2 text-white text-sm focus:outline-none focus:border-sky-500"
+                        required
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 rounded-sm text-sm transition-colors"
+                    >
+                      Update Password
+                    </button>
+
+                    {passwordMessage && (
+                      <div className={`text-sm p-2 rounded-sm ${passwordMessage.includes('✓') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                        {passwordMessage}
+                      </div>
+                    )}
+                  </form>
                 </div>
               </div>
             )}
