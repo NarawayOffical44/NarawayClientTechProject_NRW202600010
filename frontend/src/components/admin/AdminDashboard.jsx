@@ -31,11 +31,13 @@ export default function AdminDashboard() {
   const [rfqs, setRfqs] = useState([]);
   const [marketData, setMarketData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordMessage, setPasswordMessage] = useState('');
 
   const fetchAll = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [aRes, uRes, vRes, rRes, mRes] = await Promise.all([
         axios.get(`${API}/admin/analytics`, { withCredentials: true }),
@@ -51,6 +53,7 @@ export default function AdminDashboard() {
       setMarketData(mRes.data);
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.detail || err.message || 'Failed to load admin data');
     } finally {
       setLoading(false);
     }
@@ -137,6 +140,11 @@ export default function AdminDashboard() {
 
         {loading ? (
           <div className="py-16 flex justify-center"><div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" /></div>
+        ) : error ? (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-sm p-4 text-red-400">
+            <div className="font-semibold mb-2">Error Loading Data</div>
+            <div className="text-sm">{error}</div>
+          </div>
         ) : (
           <>
             {tab === 'Overview' && analytics && (
