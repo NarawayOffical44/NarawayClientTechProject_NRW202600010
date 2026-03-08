@@ -15,7 +15,11 @@ import VendorRFQView from './components/vendor/VendorRFQView';
 import AdminDashboard from './components/admin/AdminDashboard';
 import ContractsPage from './components/shared/ContractsPage';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
+// Determine backend URL based on environment
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL ||
+  (process.env.NODE_ENV === 'production'
+    ? "https://narawayclienttechproject.onrender.com"
+    : "http://localhost:8000");
 export const API = `${BACKEND_URL}/api`;
 
 const AuthContext = createContext(null);
