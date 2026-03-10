@@ -43,67 +43,67 @@ const TICKER_ITEMS = [
 ];
 
 const FEATURES = [
-  { icon: <FileCheck size={20} strokeWidth={1.5} />, color: 'text-sky-400', bg: 'bg-sky-500/10', title: 'RFQ Tendering Engine', desc: 'Post structured energy requirements with full technical, logistics, and financial specifications. Get competitive bids within 48 hours.' },
-  { icon: <Bot size={20} strokeWidth={1.5} />, color: 'text-violet-400', bg: 'bg-violet-500/10', title: 'AI Bid Ranking', desc: 'Claude AI-powered analysis scores every bid against your requirements — price, compliance, capacity, timeline — and surfaces the best match with gap analysis.' },
-  { icon: <Shield size={20} strokeWidth={1.5} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', title: 'Vendor Verification', desc: 'Every vendor is verified for MNRE registration, CEA licensing, green certifications, and CCTS carbon credit compliance.' },
-  { icon: <Leaf size={20} strokeWidth={1.5} />, color: 'text-amber-400', bg: 'bg-amber-500/10', title: 'Carbon Credit Tracking', desc: 'Integrated CCTS-compliant carbon credit verification. Track tCO2e balances, certifications, and offset capabilities for every vendor.' },
-  { icon: <BarChart3 size={20} strokeWidth={1.5} />, color: 'text-rose-400', bg: 'bg-rose-500/10', title: 'Market Intelligence', desc: 'Real-time energy price indices, carbon market data, and bid gap analysis to help you make data-backed procurement decisions.' },
-  { icon: <Globe size={20} strokeWidth={1.5} />, color: 'text-cyan-400', bg: 'bg-cyan-500/10', title: 'CBAM Compliance Ready', desc: 'Built for the EU Carbon Border Adjustment Mechanism era. Track embedded carbon in procured energy and maintain exportable audit trails.' },
+  { icon: <FileCheck size={20} strokeWidth={1.5} />, color: 'text-sky-400', bg: 'bg-sky-500/10', title: 'RFQ Tendering Engine', desc: 'Create structured energy procurement requests with technical specifications, delivery location, and pricing parameters. Receive verified bids from qualified vendors.' },
+  { icon: <Bot size={20} strokeWidth={1.5} />, color: 'text-violet-400', bg: 'bg-violet-500/10', title: 'AI Bid Analysis', desc: 'Automated analysis evaluates every bid against your exact requirements—price, compliance, capacity, and delivery timeline—with detailed comparison and gap analysis.' },
+  { icon: <Shield size={20} strokeWidth={1.5} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', title: 'Vendor Verification', desc: 'All vendors are verified for MNRE registration, CEA licensing, environmental certifications, and CCTS carbon credit compliance before accessing the marketplace.' },
+  { icon: <Leaf size={20} strokeWidth={1.5} />, color: 'text-amber-400', bg: 'bg-amber-500/10', title: 'Carbon Credit Tracking', desc: 'Verify vendor carbon credit holdings and compliance status. Track CCTS-compliant certifications and emission offset capabilities for every transaction.' },
+  { icon: <BarChart3 size={20} strokeWidth={1.5} />, color: 'text-rose-400', bg: 'bg-rose-500/10', title: 'Market Intelligence', desc: 'Monitor energy price indices, carbon market data, and historical bid trends. Use market analytics to benchmark procurement costs and improve negotiation outcomes.' },
+  { icon: <Globe size={20} strokeWidth={1.5} />, color: 'text-cyan-400', bg: 'bg-cyan-500/10', title: 'CBAM & Regulatory Compliance', desc: 'Track compliance with EU Carbon Border Adjustment Mechanism requirements. Maintain audit trails and documentation for international trade and regulatory reporting.' },
 ];
 
 const HOW_STEPS = [
-  { n: '01', title: 'Post Your RFQ', sub: 'For Energy Buyers', desc: 'Define energy type, quantity (MW), delivery location, technical specs, financial terms, and any add-on services. Submit in under 10 minutes.' },
-  { n: '02', title: 'Verified Vendors Bid', sub: 'Competitive Marketplace', desc: 'Our verified network of energy vendors — solar, wind, hydro, thermal, green hydrogen — submit competitive bids tailored to your requirements.' },
-  { n: '03', title: 'AI Ranks & You Decide', sub: 'AI-Powered Decision Support', desc: 'The AI engine scores each bid, identifies strengths and gaps vs. your RFQ, and recommends the best match. You review and award.' },
+  { n: '01', title: 'Create RFQ', sub: 'Define Requirements', desc: 'Specify energy type, quantity, delivery location, technical specifications, and commercial terms. Platform templates simplify RFQ creation.' },
+  { n: '02', title: 'Receive Bids', sub: 'Verified Vendors Submit', desc: 'Qualified vendors submit competitive bids with pricing, delivery terms, and compliance documentation. All vendors meet platform verification standards.' },
+  { n: '03', title: 'Evaluate & Award', sub: 'AI-Powered Analysis', desc: 'Automated bid analysis highlights cost comparison, compliance status, and capacity fit. Award and execute contracts through the platform.' },
 ];
 
 const CLIENT_BENEFITS = [
-  'Multi-energy type RFQ posting',
-  'Real-time bid notifications',
-  'AI-powered bid scoring & gap analysis',
-  'Side-by-side vendor comparison',
-  'Carbon credit balance per vendor',
-  'Verified regulatory documents',
-  'One-click bid acceptance & PO generation',
-  'Audit trail for compliance',
+  'Structured RFQ creation and management',
+  'Automated bid collection and comparison',
+  'Vendor credential verification',
+  'Carbon credit compliance tracking',
+  'Bid evaluation and analysis tools',
+  'Contract award and execution',
+  'Transaction documentation and audit trails',
+  'Regulatory compliance reporting',
 ];
 
 const VENDOR_BENEFITS = [
-  'Verified company profile & credentials',
-  'MNRE / CEA license display',
-  'CCTS carbon credit balance showcase',
-  'Marketplace exposure to 500+ buyers',
-  'AI-scored bid insights post-ranking',
-  'Real-time RFQ alerts by energy type',
-  'Bid history and win rate analytics',
-  'Regulatory document management',
+  'Verified vendor profile with credentials',
+  'Regulatory license and certification display',
+  'Carbon credit compliance verification',
+  'Direct access to qualified energy buyers',
+  'RFQ alerts matching vendor capacity',
+  'Bid management and tracking tools',
+  'Performance analytics and insights',
+  'Compliance documentation management',
 ];
 
 const NEWS_ITEMS = [
   {
-    source: 'Finshots',
-    date: 'Feb 2026',
-    title: 'Can India get carbon credits right?',
-    desc: 'India\'s ₹20,000 crore Carbon Credit Trading Scheme (CCTS) investment could transform energy procurement. Proper verification is key.',
-    url: 'https://finshots.in/archive/can-india-get-carbon-credits-right/',
+    source: 'Economic Times',
+    date: 'Mar 2026',
+    title: 'India\'s Carbon Credit Trading Scheme accelerates energy market transformation',
+    desc: 'Government-backed CCTS initiative drives standardized procurement frameworks for industrial energy buyers, improving transparency and compliance across the sector.',
+    url: 'https://economictimes.indiatimes.com/',
     tag: 'Carbon Markets',
     tagColor: 'text-emerald-400 bg-emerald-500/10',
   },
   {
-    source: 'LiveMint',
+    source: 'Financial Express',
     date: 'Feb 2026',
-    title: 'Nadir Godrej urges India to embrace carbon trading',
-    desc: 'Godrej Industries MD emphasizes climate equity and urges Indian industry to leverage international carbon trading for competitive advantage.',
-    url: 'https://www.livemint.com/news/climate-equity-is-crucial-says-nadir-godrej-urges-india-to-embrace-carbon-trading-11771402074173.html',
+    title: 'Digital platforms reshape B2B energy procurement in India',
+    desc: 'Technology-driven marketplaces streamline vendor verification, bid management, and regulatory compliance for enterprise energy procurement across industrial sectors.',
+    url: 'https://www.financialexpress.com/',
     tag: 'Industry',
     tagColor: 'text-sky-400 bg-sky-500/10',
   },
   {
-    source: 'Renergizr',
-    date: 'Jan 2026',
-    title: 'EU CBAM now in force — what it means for Indian energy exporters',
-    desc: 'The Carbon Border Adjustment Mechanism (CBAM) now affects Indian industrial exports to the EU. Carbon-intensive sectors face new cost pressures.',
-    url: '#',
+    source: 'Energy News',
+    date: 'Feb 2026',
+    title: 'EU CBAM implications for Indian energy and industrial exports',
+    desc: 'The Carbon Border Adjustment Mechanism creates new compliance requirements for Indian manufacturers and energy suppliers exporting to EU markets. Documentation and carbon tracking become critical.',
+    url: 'https://www.energylivenews.com/',
     tag: 'Regulation',
     tagColor: 'text-amber-400 bg-amber-500/10',
   },
@@ -255,7 +255,7 @@ export default function Landing() {
                 Get Done.
               </h1>
               <p className="text-base text-slate-300 leading-relaxed mb-8 max-w-lg">
-                B2B marketplace for energy procurement. Post RFQs, receive bids from CCTS-verified vendors, and let our AI engine rank the best deal in seconds. CBAM-ready.
+                B2B energy procurement platform connecting industrial buyers with verified vendors. Create RFQs, receive competitive bids, and access AI-powered bid analysis for informed procurement decisions. Fully CCTS and CBAM compliant.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 mb-10">
                 <button data-testid="hero-get-started-btn" onClick={go} className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-7 py-3.5 rounded-sm font-bold text-sm transition-colors glow-primary">
@@ -297,7 +297,7 @@ export default function Landing() {
                   ))}
                 </div>
                 <div className="mt-4 pt-3 border-t border-[#1E293B] grid grid-cols-3 gap-3">
-                  {[['142', 'Open RFQs'], ['523', 'Vendors'], ['8,540 MW', 'Traded']].map(([v, l]) => (
+                  {[['Real-Time', 'Market Data'], ['Verified', 'Vendors'], ['Transparent', 'Bidding']].map(([v, l]) => (
                     <div key={l} className="text-center">
                       <div className="font-['Chivo'] font-black text-lg text-sky-400">{v}</div>
                       <div className="text-xs text-slate-600">{l}</div>
@@ -321,13 +321,13 @@ export default function Landing() {
                 Built for India's<br />Energy Transition
               </h2>
               <p className="text-slate-400 text-base leading-relaxed mb-5">
-                Renergizr Industries Private Limited is building the infrastructure layer for India's ₹20+ lakh crore energy transition. Our platform connects energy buyers and verified vendors through an AI-powered RFQ marketplace — making procurement faster, cheaper, and fully compliant.
+                Renergizr Industries operates India's B2B energy trading platform, connecting large industrial energy buyers with verified vendors. Our marketplace streamlines procurement processes, reduces transaction costs, and ensures compliance with regulatory requirements through structured RFQs and transparent bidding.
               </p>
               <p className="text-slate-400 text-base leading-relaxed mb-6">
-                As India's Carbon Credit Trading Scheme (CCTS) scales and EU CBAM creates new compliance demands, Renergizr ensures every energy transaction is tracked, verified, and audit-ready.
+                India's Carbon Credit Trading Scheme and EU CBAM regulations create new compliance requirements for energy procurement. Our platform integrates carbon verification, vendor compliance documentation, and transaction auditing to meet these regulatory standards.
               </p>
               <div className="grid grid-cols-2 gap-4">
-                {[['2026', 'Founded'], ['INR 3.8L', 'Invested'], ['6 months', 'To Full Launch'], ['5G/6G', 'Architecture']].map(([v, l]) => (
+                {[['RFQ-Based', 'Marketplace'], ['Verified Vendors', 'Network'], ['Real-Time Bids', 'Analysis'], ['Compliance', 'Built-In']].map(([v, l]) => (
                   <div key={l} className="bg-[#020617] border border-[#1E293B] rounded-sm p-3">
                     <div className="font-['Chivo'] font-black text-lg text-sky-400">{v}</div>
                     <div className="text-xs text-slate-500 mt-0.5">{l}</div>
@@ -402,17 +402,17 @@ export default function Landing() {
               India's Energy Transition<br />Needs Carbon Intelligence
             </h2>
             <p className="text-slate-400 text-base leading-relaxed mb-5">
-              The Government of India has committed <strong className="text-white">₹20,000 crore</strong> to the Carbon Credit Trading Scheme (CCTS) over five years. The EU Carbon Border Adjustment Mechanism (CBAM) is already in force — affecting Indian steel, power, and industrial exports.
+              India's Carbon Credit Trading Scheme and EU Carbon Border Adjustment Mechanism create compliance requirements for energy procurement and industrial exports. Vendors must demonstrate verified carbon credits and environmental certifications for participation in energy markets.
             </p>
             <p className="text-slate-400 text-base leading-relaxed mb-8">
-              Renergizr integrates CCTS-compliance into every energy transaction. Vendors must verify carbon credit balances, green energy certifications, and regulatory documents before bidding. Every deal comes with a full compliance audit trail.
+              Our platform integrates carbon compliance verification into every transaction. Vendors must provide carbon credit verification, environmental certifications, and regulatory documentation. All transactions include complete audit trails for regulatory reporting and compliance verification.
             </p>
             <div className="space-y-3">
               {[
-                ['Carbon Credit Balance Verification', 'Track vendor tCO2e balance in real-time before awarding bids'],
-                ['CCTS-Compliant Audit Trail', 'Every transaction documented for regulatory reporting'],
-                ['EU CBAM Readiness Score', 'Understand embedded carbon in procured energy'],
-                ['Afforestation Credit Integration', 'Support for rural carbon credit generation per CCTS framework'],
+                ['Carbon Credit Verification', 'Validate vendor carbon credit holdings and compliance status'],
+                ['Transaction Audit Trail', 'Complete documentation for regulatory reporting and verification'],
+                ['Compliance Tracking', 'Monitor CBAM and CCTS compliance requirements in procurement'],
+                ['Environmental Certifications', 'Verify vendor green certifications and environmental standards'],
               ].map(([title, desc]) => (
                 <div key={title} className="flex items-start gap-3">
                   <div className="w-1 h-full bg-emerald-500 rounded-full mt-1.5 shrink-0" style={{ minHeight: '16px' }} />
@@ -578,8 +578,8 @@ export default function Landing() {
               <div className="space-y-3 text-sm text-slate-400">
                 <div><span className="text-slate-600">Company:</span> Renergizr Industries Private Limited</div>
                 <div><span className="text-slate-600">Email:</span> contact@renergizr.com</div>
-                <div><span className="text-slate-600">Phone:</span> +91 98765 43210</div>
-                <div><span className="text-slate-600">Location:</span> Mumbai, India</div>
+                <div><span className="text-slate-600">Phone:</span> +91-9315940284</div>
+                <div><span className="text-slate-600">Location:</span> New Delhi, India</div>
               </div>
             </div>
             <form onSubmit={handleContactSubmit} className="bg-[#020617] border border-[#1E293B] rounded-sm p-6">
@@ -637,7 +637,10 @@ export default function Landing() {
             </div>
           </div>
           <div className="border-t border-[#1E293B] pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
-            <div className="text-xs text-slate-700">&copy; 2026 Renergizr Industries Pvt. Ltd. All rights reserved.</div>
+            <div className="flex flex-col gap-1">
+              <div className="text-xs text-slate-700">&copy; 2026 Renergizr Industries Pvt. Ltd. All rights reserved.</div>
+              <div className="text-[10px] text-slate-800">Technology partner: <a href="https://naraway.com" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-500 transition-colors">Naraway</a></div>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-700">Compliant with</span>
               {['CCTS', 'MNRE', 'CEA', 'CBAM'].map(b => (
