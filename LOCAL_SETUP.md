@@ -19,14 +19,18 @@ PORT=8001
 NODE_ENV=development
 CORS_ORIGINS=http://localhost:3000
 COOKIE_NAME=session_token
-ANTHROPIC_API_KEY=<your-anthropic-api-key>
+GROQ_API_KEY=<your-groq-api-key>
 ```
 
-**Get ANTHROPIC_API_KEY:**
-1. Visit https://console.anthropic.com/
-2. Sign in with your Anthropic account
-3. Create API key
-4. Copy and paste into `.env`
+**Get GROQ_API_KEY:**
+1. Visit https://console.groq.com/
+2. Sign in with your Groq account (or create one)
+3. Navigate to API Keys
+4. Create new API key
+5. Copy and paste into `.env` as GROQ_API_KEY
+
+**Note:** Renergizr uses Groq API (mixtral-8x7b-32768) for bid ranking—fast, cost-effective, open-source.
+Alternative: To use Anthropic Claude instead, request support via GitHub issues.
 
 ### 2. Install & Start Backend
 

@@ -23,8 +23,8 @@ const User     = require('../models/User');
 const VendorProfile = require('../models/VendorProfile');
 const Notification  = require('../models/Notification');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { generateId, asyncHandler, sendError } = require('../utils/helpers');
-const { rankBids, calculateComplianceScore, calculateDistanceFeasibility, calculateVendorReliability } = require('../utils/ai');
+const { generateId, asyncHandler, sendError, sanitizeString, validatePrice, validateQuantity } = require('../utils/helpers');
+const { rankBids, calculateComplianceScore, calculateVendorReliability, calculateDistanceFeasibility, enrichBidsWithScores } = require('../utils/ai');
 const { sendNewBid, sendContractAwarded } = require('../utils/email');
 
 // ── Helper: create a notification in the DB ────────────────────────────────
@@ -52,11 +52,38 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
 
 // POST /api/rfqs
 router.post('/', requireAuth, requireRole('client'), asyncHandler(async (req, res) => {
+  const { title, description, energy_type, quantity_mw, voltage_kv, delivery_location, delivery_start_date, delivery_end_date, price_ceiling, payment_terms, advance_payment_pct } = req.body;
+
+  // Validation
+  if (!title || !energy_type || !quantity_mw || !delivery_location || !price_ceiling) {
+    return sendError(res, 400, 'Missing required fields: title, energy_type, quantity_mw, delivery_location, price_ceiling');
+  }
+  if (!['solar', 'wind', 'hydro', 'thermal', 'green_hydrogen'].includes(energy_type)) {
+    return sendError(res, 400, 'Invalid energy_type');
+  }
+  if (!validateQuantity(quantity_mw)) {
+    return sendError(res, 400, 'Invalid quantity_mw: must be positive number');
+  }
+  if (!validatePrice(price_ceiling)) {
+    return sendError(res, 400, 'Invalid price_ceiling: must be 0-99999.9999');
+  }
+
+  // Sanitize inputs
   const rfq = await RFQ.create({
     rfq_id:     generateId('rfq_'),
     client_id:  req.user.user_id,
     client_name: req.user.name,
-    ...req.body,
+    title:      sanitizeString(title, 255),
+    description: sanitizeString(description, 2000),
+    energy_type,
+    quantity_mw: parseFloat(quantity_mw),
+    voltage_kv: voltage_kv ? parseFloat(voltage_kv) : null,
+    delivery_location: sanitizeString(delivery_location, 500),
+    delivery_start_date,
+    delivery_end_date,
+    price_ceiling: parseFloat(price_ceiling),
+    payment_terms: sanitizeString(payment_terms, 500),
+    advance_payment_pct: advance_payment_pct ? parseFloat(advance_payment_pct) : 0,
     status: 'open',
   });
   return res.status(201).json(rfq);
@@ -185,6 +212,27 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
   const existing = await Bid.findOne({ rfq_id: rfq.rfq_id, vendor_id: req.user.user_id });
   if (existing) return sendError(res, 400, 'You have already bid on this RFQ');
 
+  const { price_per_unit, quantity_mw, delivery_timeline, notes } = req.body;
+
+  // Validation
+  if (!price_per_unit || !quantity_mw) {
+    return sendError(res, 400, 'Missing required fields: price_per_unit, quantity_mw');
+  }
+  if (!validatePrice(price_per_unit)) {
+    return sendError(res, 400, 'Invalid price_per_unit: must be 0-99999.9999');
+  }
+  if (!validateQuantity(quantity_mw)) {
+    return sendError(res, 400, 'Invalid quantity_mw: must be positive number');
+  }
+  // NEW: Validate price against ceiling
+  if (parseFloat(price_per_unit) > rfq.price_ceiling) {
+    return sendError(res, 400, `Price exceeds RFQ ceiling: ₹${rfq.price_ceiling}/kWh`, { ceiling: rfq.price_ceiling, offered: price_per_unit });
+  }
+  // NEW: Validate quantity matches RFQ requirement (allow equal or less)
+  if (parseFloat(quantity_mw) > rfq.quantity_mw) {
+    return sendError(res, 400, `Quantity exceeds RFQ requirement: ${rfq.quantity_mw} MW`, { required: rfq.quantity_mw, offered: quantity_mw });
+  }
+
   const vp = await VendorProfile.findOne({ user_id: req.user.user_id }).lean();
 
   const bid = await Bid.create({
@@ -196,7 +244,10 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
     vendor_certifications:    vp?.certifications || [],
     vendor_carbon_credits:    vp?.carbon_credits_ccts || 0,
     vendor_verification_status: vp?.verification_status || 'pending',
-    ...req.body,
+    price_per_unit: parseFloat(price_per_unit),
+    quantity_mw: parseFloat(quantity_mw),
+    delivery_timeline: sanitizeString(delivery_timeline, 500),
+    notes: sanitizeString(notes, 1000),
     status: 'submitted',
   });
 
@@ -215,20 +266,24 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
 router.post('/:rfq_id/bids/rank', requireAuth, requireRole('client'), asyncHandler(async (req, res) => {
   const rfq  = await RFQ.findOne({ rfq_id: req.params.rfq_id }).lean();
   if (!rfq) return sendError(res, 404, 'RFQ not found');
+  if (rfq.client_id !== req.user.user_id && req.user.role !== 'admin') {
+    return sendError(res, 403, 'Not your RFQ');
+  }
 
   const bids = await Bid.find({ rfq_id: rfq.rfq_id }).lean();
   if (!bids.length) return sendError(res, 400, 'No bids to rank');
 
+  // Get Groq AI ranking
   const aiResult = await rankBids(rfq, bids);
 
-  // Persist AI scores and calculated metrics to each bid
+  // Calculate and persist real scores for each bid
   for (const ranking of aiResult.rankings || []) {
     const bid = bids.find(b => b.bid_id === ranking.bid_id);
     if (!bid) continue;
 
-    const complianceScore = calculateComplianceScore(bid.vendor_certifications, bid.vendor_verification_status);
-    const distanceFeasibility = calculateDistanceFeasibility();
-    const vendorReliability = calculateVendorReliability();
+    const complianceScore = await calculateComplianceScore(bid.vendor_id);
+    const reliabilityScore = await calculateVendorReliability(bid.vendor_id);
+    const distanceScore = calculateDistanceFeasibility(bid.vendor_location, rfq.delivery_location);
 
     await Bid.updateOne(
       { bid_id: ranking.bid_id },
@@ -236,8 +291,8 @@ router.post('/:rfq_id/bids/rank', requireAuth, requireRole('client'), asyncHandl
         ai_score: ranking.score,
         ai_analysis: { strengths: ranking.strengths, gaps: ranking.gaps, recommendation: ranking.recommendation },
         compliance_score: complianceScore,
-        distance_feasibility: distanceFeasibility,
-        vendor_reliability: vendorReliability
+        distance_feasibility: distanceScore,
+        vendor_reliability: reliabilityScore
       }}
     );
   }

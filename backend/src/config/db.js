@@ -44,7 +44,11 @@ const logger = require("../utils/logger");
 
 async function connectDB() {
   try {
-    const mongoUrl = process.env.MONGO_URL || "mongodb+srv://anilanita07_db_user:OMAagppkLGw8DmwR@cluster0.u33r6dj.mongodb.net/?appName=Cluster0";
+    const mongoUrl = process.env.MONGO_URL;
+
+    if (!mongoUrl) {
+      throw new Error('MONGO_URL environment variable is required');
+    }
 
     await mongoose.connect(mongoUrl);
 

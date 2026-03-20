@@ -222,6 +222,21 @@ export default function GridMonitor() {
   return (
     <div className="space-y-6">
 
+      {/* ── SIMULATOR BANNER ─────────────────────────────────────────────────────── */}
+      <div className="bg-amber-500/10 border border-amber-500/20 rounded-sm p-4 flex items-start gap-3">
+        <AlertTriangle size={18} className="text-amber-400 flex-shrink-0 mt-0.5" />
+        <div>
+          <div className="font-semibold text-amber-400 text-sm">SIMULATOR MODE</div>
+          <p className="text-xs text-amber-200/80 mt-1">
+            This grid monitor displays <strong>simulated</strong> telemetry data for demonstration purposes.
+            Production integration with real NLDC SCADA API and WebSocket real-time push is pending.
+            <a href="https://github.com/NarawayOffical44/NarawayClientTechProject_NRW202600010/issues"
+               target="_blank" rel="noopener noreferrer"
+               className="text-sky-400 hover:underline ml-1">Request production integration →</a>
+          </p>
+        </div>
+      </div>
+
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
@@ -230,7 +245,7 @@ export default function GridMonitor() {
           </div>
           <div>
             <h2 className="font-['Chivo'] font-bold text-base text-white">5G/6G Grid Balancing Monitor</h2>
-            <p className="text-xs text-slate-500">Low-latency real-time grid telemetry · polling every {POLL_MS / 1000}s</p>
+            <p className="text-xs text-slate-500">Simulated low-latency telemetry · polling every {POLL_MS / 1000}s</p>
           </div>
         </div>
 

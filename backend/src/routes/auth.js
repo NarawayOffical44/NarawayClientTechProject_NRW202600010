@@ -15,14 +15,29 @@ const express  = require('express');
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
 const axios    = require('axios');
+const rateLimit = require('express-rate-limit');
 const router   = express.Router();
 const User     = require('../models/User');
 const VendorProfile = require('../models/VendorProfile');
-const { generateId, asyncHandler, sendError } = require('../utils/helpers');
+const { generateId, asyncHandler, sendError, sanitizeString, validateEmail } = require('../utils/helpers');
 const { requireAuth } = require('../middleware/auth');
 
 const COOKIE_NAME = process.env.COOKIE_NAME || 'session_token';
-const JWT_SECRET  = process.env.JWT_SECRET || 'your-strong-random-secret-here-change-in-production';
+const JWT_SECRET  = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required - cannot start without it');
+}
+
+// Auth rate limiter: max 5 attempts per 15 min, skip on successful login
+const authLimiter = rateLimit({
+  windowMs:               15 * 60 * 1000,
+  max:                    5,
+  skipSuccessfulRequests: true,
+  message:                { error: true, message: 'Too many login/register attempts. Please try again later.' },
+  standardHeaders:        true,
+  legacyHeaders:          false,
+});
 const COOKIE_OPTS = {
   httpOnly:  true,
   sameSite:  'lax',
@@ -76,41 +91,54 @@ function safeUser(user) {
 //   return res.status(201).json({ user: safeUser(user) });
 // }));
 
-router.post('/register', asyncHandler(async (req, res) => {
+router.post('/register', authLimiter, asyncHandler(async (req, res) => {
   const { name, email, password, role = 'client', company = '' } = req.body;
 
+  // Validation
   if (!name || !email || !password) {
-    return sendError(res, 400, 'name, email and password are required');
+    return sendError(res, 400, 'Missing required fields: name, email, password');
   }
-
+  if (!validateEmail(email)) {
+    return sendError(res, 400, 'Invalid email format');
+  }
+  if (password.length < 8) {
+    return sendError(res, 400, 'Password must be at least 8 characters');
+  }
   if (!['client', 'vendor'].includes(role)) {
     return sendError(res, 400, 'role must be client or vendor');
   }
 
+  // Sanitize inputs
+  const sanitizedName = sanitizeString(name, 255);
+  const sanitizedCompany = sanitizeString(company, 255);
+
+  // Check if email already registered
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) {
     return sendError(res, 400, 'Email already registered');
   }
 
+  // Hash password and create user
   const hashed = await bcrypt.hash(password, 12);
-
   const user = await User.create({
     user_id: generateId('usr_'),
-    name,
+    name: sanitizedName,
     email: email.toLowerCase(),
     password: hashed,
     role,
-    company,
+    company: sanitizedCompany,
   });
 
+  // Auto-create vendor profile
   if (role === 'vendor') {
     await VendorProfile.create({
       vendor_id: generateId('vnd_'),
       user_id: user.user_id,
-      company_name: company || name,
+      company_name: sanitizedCompany || sanitizedName,
     });
   }
 
+  // Set JWT cookie and return user
   const token = signToken(user);
   res.cookie(COOKIE_NAME, token, COOKIE_OPTS);
 
@@ -119,16 +147,28 @@ router.post('/register', asyncHandler(async (req, res) => {
   });
 }));
 // POST /api/auth/login
-router.post('/login', asyncHandler(async (req, res) => {
+router.post('/login', authLimiter, asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return sendError(res, 400, 'email and password are required');
+
+  if (!email || !password) {
+    return sendError(res, 400, 'email and password are required');
+  }
+  if (!validateEmail(email)) {
+    return sendError(res, 400, 'Invalid email format');
+  }
 
   const user = await User.findOne({ email: email.toLowerCase() });
-  if (!user || !user.password) return sendError(res, 401, 'Invalid credentials');
-  if (!user.is_active) return sendError(res, 403, 'Account deactivated. Contact admin.');
+  if (!user || !user.password) {
+    return sendError(res, 401, 'Invalid email or password');
+  }
+  if (!user.is_active) {
+    return sendError(res, 403, 'Account deactivated. Contact support.');
+  }
 
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return sendError(res, 401, 'Invalid credentials');
+  if (!valid) {
+    return sendError(res, 401, 'Invalid email or password');
+  }
 
   const token = signToken(user);
   res.cookie(COOKIE_NAME, token, COOKIE_OPTS);

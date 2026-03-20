@@ -16,9 +16,11 @@ const Bid       = require('../models/Bid');
 const VendorProfile = require('../models/VendorProfile');
 const Contract  = require('../models/Contract');
 const Notification = require('../models/Notification');
+const AuditLog  = require('../models/AuditLog');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { generateId, asyncHandler, sendError } = require('../utils/helpers');
 const { sendVendorVerified } = require('../utils/email');
+const { auditLog, getAuditLogs } = require('../utils/audit');
 
 // All admin routes require admin role
 router.use(requireAuth, requireRole('admin'));
@@ -47,28 +49,68 @@ router.get('/users', asyncHandler(async (req, res) => {
 
 // PATCH /api/admin/users/:user_id
 router.patch('/users/:user_id', asyncHandler(async (req, res) => {
-  const { role, is_active, verification_status } = req.body;
+  const { role, is_active, verification_status, reason } = req.body;
   const user = await User.findOne({ user_id: req.params.user_id });
   if (!user) return sendError(res, 404, 'User not found');
 
-  if (role)      user.role      = role;
-  if (is_active !== undefined) user.is_active = is_active;
+  // Track changes for audit log
+  const changes = {};
+  if (role !== undefined && user.role !== role) {
+    changes.role = { old: user.role, new: role };
+    user.role = role;
+  }
+  if (is_active !== undefined && user.is_active !== is_active) {
+    changes.is_active = { old: user.is_active, new: is_active };
+    user.is_active = is_active;
+  }
+
   await user.save();
 
   // If verification_status is being set, update vendor profile
   if (verification_status) {
-    const vp = await VendorProfile.findOneAndUpdate(
-      { user_id: user.user_id },
-      { $set: { verification_status } },
-      { new: true }
-    );
-    if (verification_status === 'verified' && vp) {
-      sendVendorVerified({ vendorEmail: user.email, companyName: vp.company_name || user.name });
-      // Notify vendor
-      try {
-        await Notification.create({ notification_id: generateId('ntf_'), user_id: user.user_id, type: 'vendor_verified', message: `Your company has been verified on Renergizr! You can now bid on all RFQs.` });
-      } catch {}
+    const vp = await VendorProfile.findOne({ user_id: user.user_id });
+    if (vp && vp.verification_status !== verification_status) {
+      changes.verification_status = { old: vp.verification_status, new: verification_status };
+      vp.verification_status = verification_status;
+      await vp.save();
+
+      // Log the verification action
+      await auditLog(
+        req,
+        verification_status === 'verified' ? 'verify_vendor' : 'suspend_vendor',
+        'vendor',
+        vp.vendor_id,
+        changes,
+        reason || `Vendor ${verification_status}`
+      );
+
+      if (verification_status === 'verified') {
+        sendVendorVerified({ vendorEmail: user.email, companyName: vp.company_name || user.name });
+        // Notify vendor
+        try {
+          await Notification.create({
+            notification_id: generateId('ntf_'),
+            user_id: user.user_id,
+            type: 'vendor_verified',
+            message: `Your company has been verified on Renergizr! You can now bid on all RFQs.`
+          });
+        } catch {}
+      } else if (verification_status === 'rejected') {
+        try {
+          await Notification.create({
+            notification_id: generateId('ntf_'),
+            user_id: user.user_id,
+            type: 'vendor_rejected',
+            message: `Your company verification was rejected. Reason: ${reason || 'See admin dashboard'}`
+          });
+        } catch {}
+      }
     }
+  }
+
+  // Log user role/active changes
+  if (Object.keys(changes).length > 0 && !verification_status) {
+    await auditLog(req, 'update_user', 'user', user.user_id, changes, reason || 'User update');
   }
 
   const { password, ...safe } = user.toObject();
@@ -96,6 +138,20 @@ router.get('/rfqs', asyncHandler(async (req, res) => {
 router.get('/contracts', asyncHandler(async (req, res) => {
   const contracts = await Contract.find().sort({ createdAt: -1 }).lean();
   return res.json(contracts);
+}));
+
+// GET /api/admin/audit-logs — Retrieve audit trail
+router.get('/audit-logs', asyncHandler(async (req, res) => {
+  const { action, entity_type, entity_id, days = 30, limit = 100 } = req.query;
+  const filters = {
+    ...(action && { action }),
+    ...(entity_type && { entity_type }),
+    ...(entity_id && { entity_id }),
+    ...(days && { days: parseInt(days) }),
+  };
+
+  const logs = await getAuditLogs(filters, parseInt(limit));
+  return res.json(logs);
 }));
 
 module.exports = router;

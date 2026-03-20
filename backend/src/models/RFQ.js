@@ -13,7 +13,7 @@
 const mongoose = require('mongoose');
 
 const rfqSchema = new mongoose.Schema({
-  rfq_id:               { type: String, required: true, unique: true, index: true },
+  rfq_id:               { type: String, required: true, unique: true, sparse: true, index: true },
   client_id:            { type: String, required: true, index: true },
   client_name:          { type: String },
 

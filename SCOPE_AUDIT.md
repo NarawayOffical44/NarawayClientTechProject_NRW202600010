@@ -33,8 +33,9 @@
 
 **Implementation:**
 - Module: `backend/src/utils/ai.js`
-- AI Provider: Anthropic Claude Haiku (claude-haiku-4-5-20251001)
-- Integration: `@anthropic-ai/sdk` v0.24.0
+- AI Provider: **Groq API (mixtral-8x7b-32768)** — Open-source, fast, cost-effective
+- Integration: `axios` HTTP client to Groq API endpoint
+- Why Groq: 5-10x faster than Claude, 10x cheaper, ideal for structured JSON analysis
 
 **Features:**
 - Structured prompt engineering for deterministic JSON output

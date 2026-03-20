@@ -7,9 +7,9 @@
 const mongoose = require('mongoose');
 
 const bidSchema = new mongoose.Schema({
-  bid_id:           { type: String, required: true, unique: true, index: true },
+  bid_id:           { type: String, required: true, unique: true, sparse: true, index: true },
   rfq_id:           { type: String, required: true, index: true },
-  vendor_id:        { type: String, required: true },
+  vendor_id:        { type: String, required: true, index: true },
   vendor_name:      { type: String },
   vendor_company:   { type: String },
 
@@ -41,5 +41,8 @@ const bidSchema = new mongoose.Schema({
   distance_feasibility:    { type: Number },      // 0-100, based on delivery location vs vendor location
   vendor_reliability:      { type: Number },      // 0-100, calculated from vendor history
 }, { timestamps: true });
+
+// Compound unique index: same vendor cannot bid twice on same RFQ
+bidSchema.index({ rfq_id: 1, vendor_id: 1 }, { unique: true });
 
 module.exports = mongoose.model('Bid', bidSchema, 'bids');
