@@ -109,10 +109,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to={user.role === 'admin' ? '/admin' : `/${user.role}/dashboard`} className="flex items-center gap-2 shrink-0">
-          <div className="w-6 h-6 bg-sky-500 rounded-sm flex items-center justify-center">
-            <Zap size={12} strokeWidth={2.5} className="text-white" />
-          </div>
-          <span className="font-['Chivo'] font-black text-base text-white hidden sm:block">RENERGIZR</span>
+          <img
+            src="/renergizr-logo.jpg"
+            alt="Renergizr Industries"
+            className="h-8 w-auto object-contain"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+          <span className="font-['Chivo'] font-black text-xs sm:text-sm text-white">RENERGIZR</span>
         </Link>
 
         {/* Nav Links */}

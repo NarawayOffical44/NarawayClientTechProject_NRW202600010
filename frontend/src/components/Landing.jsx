@@ -205,9 +205,12 @@ export default function Landing() {
       <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#020617]/96 backdrop-blur-xl border-b border-[#1E293B]' : 'bg-[#020617]/80 backdrop-blur-sm border-b border-[#1E293B]/40'}`}>
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-sky-500 rounded-sm flex items-center justify-center">
-              <Zap size={13} strokeWidth={2.5} className="text-white" />
-            </div>
+            <img
+              src="/renergizr-logo.jpg"
+              alt="Renergizr Industries"
+              className="h-10 w-auto object-contain"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
             <div>
               <div className="font-['Chivo'] font-black text-base tracking-tight text-white leading-tight">RENERGIZR</div>
               <div className="text-[9px] text-slate-500 tracking-widest leading-none">INDUSTRIES PVT. LTD.</div>
