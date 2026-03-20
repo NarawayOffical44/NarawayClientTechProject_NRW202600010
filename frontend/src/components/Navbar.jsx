@@ -108,14 +108,13 @@ export default function Navbar() {
     <nav data-testid="app-navbar" className="bg-[#0F172A]/95 backdrop-blur-xl border-b border-[#1E293B] sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link to={user.role === 'admin' ? '/admin' : `/${user.role}/dashboard`} className="flex items-center gap-2 shrink-0">
+        <Link to={user.role === 'admin' ? '/admin' : `/${user.role}/dashboard`} className="shrink-0">
           <img
             src="/renergizr-logo.jpg"
             alt="Renergizr Industries"
             className="h-8 w-auto object-contain"
             onError={(e) => { e.target.style.display = 'none'; }}
           />
-          <span className="font-['Chivo'] font-black text-xs sm:text-sm text-white">RENERGIZR</span>
         </Link>
 
         {/* Nav Links */}

@@ -211,10 +211,6 @@ export default function Landing() {
               className="h-10 w-auto object-contain"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
-            <div>
-              <div className="font-['Chivo'] font-black text-base tracking-tight text-white leading-tight">RENERGIZR</div>
-              <div className="text-[9px] text-slate-500 tracking-widest leading-none">INDUSTRIES PVT. LTD.</div>
-            </div>
           </div>
           <div className="hidden md:flex items-center gap-6">
             {[['Platform', '#features'], ['How It Works', '#how'], ['Carbon & CCTS', '#carbon'], ['For Vendors', '#vendors'], ['Insights', '#news']].map(([l, h]) => (

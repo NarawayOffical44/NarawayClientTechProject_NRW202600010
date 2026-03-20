@@ -76,14 +76,13 @@ export default function Auth() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/60 to-[#0F172A]/90" />
         <div className="relative">
-          <div className="flex items-center gap-3 mb-16">
+          <div className="mb-16">
             <img
               src="/renergizr-logo.jpg"
               alt="Renergizr"
-              className="h-10 w-auto object-contain"
+              className="h-12 w-auto object-contain"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
-            <span className="font-['Chivo'] font-black text-xl text-white">RENERGIZR</span>
           </div>
           <h2 className="font-['Chivo'] font-black text-5xl text-white leading-tight mb-6">
             The future of<br />energy trading<br />is <span className="text-sky-400">here.</span>
@@ -110,14 +109,13 @@ export default function Auth() {
       <div className="flex-1 flex items-center justify-center p-6 md:p-12">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
+          <div className="mb-10 lg:hidden">
             <img
               src="/renergizr-logo.jpg"
               alt="Renergizr"
               className="h-8 w-auto object-contain"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
-            <span className="font-['Chivo'] font-black text-xl text-white">RENERGIZR</span>
           </div>
 
           {/* Tabs */}
