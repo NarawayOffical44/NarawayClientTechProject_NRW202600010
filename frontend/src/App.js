@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import axios from 'axios';
 import './App.css';
 
+import Landing from './components/Landing';
 import Auth from './components/Auth';
 import ClientDashboard from './components/client/ClientDashboard';
 import CreateRFQ from './components/client/CreateRFQ';
@@ -125,7 +126,7 @@ function AppRouter() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/auth" replace />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/client/dashboard" element={<ProtectedRoute role="client"><ClientDashboard /></ProtectedRoute>} />
       <Route path="/client/rfqs/new" element={<ProtectedRoute role="client"><CreateRFQ /></ProtectedRoute>} />
@@ -137,7 +138,7 @@ function AppRouter() {
       <Route path="/vendor/rfqs/:rfq_id" element={<ProtectedRoute role="vendor"><VendorRFQView /></ProtectedRoute>} />
       <Route path="/vendor/contracts" element={<ProtectedRoute role="vendor"><ContractsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/auth" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
