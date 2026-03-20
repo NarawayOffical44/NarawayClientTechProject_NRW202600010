@@ -76,10 +76,13 @@ export default function Auth() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/60 to-[#0F172A]/90" />
         <div className="relative">
-          <div className="flex items-center gap-2 mb-16">
-            <div className="w-8 h-8 bg-sky-500 rounded-sm flex items-center justify-center">
-              <Zap size={16} strokeWidth={2.5} className="text-white" />
-            </div>
+          <div className="flex items-center gap-3 mb-16">
+            <img
+              src="/renergizr-logo.jpg"
+              alt="Renergizr"
+              className="h-10 w-auto object-contain"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
             <span className="font-['Chivo'] font-black text-xl text-white">RENERGIZR</span>
           </div>
           <h2 className="font-['Chivo'] font-black text-5xl text-white leading-tight mb-6">
@@ -108,9 +111,12 @@ export default function Auth() {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="w-8 h-8 bg-sky-500 rounded-sm flex items-center justify-center">
-              <Zap size={16} strokeWidth={2.5} className="text-white" />
-            </div>
+            <img
+              src="/renergizr-logo.jpg"
+              alt="Renergizr"
+              className="h-8 w-auto object-contain"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
             <span className="font-['Chivo'] font-black text-xl text-white">RENERGIZR</span>
           </div>
 
