@@ -42,12 +42,12 @@ const COOKIE_OPTS = {
   httpOnly:  true,
   sameSite:  'lax',
   secure:    process.env.NODE_ENV === 'production',
-  maxAge:    7 * 24 * 60 * 60 * 1000,  // 7 days in ms
+  maxAge:    90 * 24 * 60 * 60 * 1000,  // 90 days in ms
 };
 
 /** Sign a JWT for a user */
 function signToken(user) {
-  return jwt.sign({ user_id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ user_id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
 }
 
 /** Strip password from user object before sending to client */
