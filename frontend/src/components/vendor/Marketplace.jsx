@@ -35,7 +35,7 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-[#020617]">
       <Navbar />
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
         <div className="mb-8">
           <h1 className="font-['Chivo'] font-bold text-2xl md:text-3xl text-white mb-1">Energy Marketplace</h1>
           <p className="text-slate-500 text-sm">Browse open RFQs and submit competitive bids</p>
@@ -90,7 +90,7 @@ export default function Marketplace() {
             <p className="text-slate-500 text-sm">No open RFQs found.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid xl:grid-cols-2 gap-3">
             {filtered.map(rfq => (
               <div
                 key={rfq.rfq_id}

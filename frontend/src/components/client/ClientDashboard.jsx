@@ -9,7 +9,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const STATUS_STYLES = {
   open: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
   closed: 'bg-slate-500/10 text-slate-400 border border-slate-500/20',
+  bidding_closed: 'bg-slate-500/10 text-slate-400 border border-slate-500/20',
   awarded: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  completed: 'bg-violet-500/10 text-violet-400 border border-violet-500/20',
   draft: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
 };
 
@@ -67,8 +69,10 @@ export default function ClientDashboard() {
   const stats = {
     total: rfqs.length,
     open: rfqs.filter(r => r.status === 'open').length,
+    closed: rfqs.filter(r => r.status === 'bidding_closed' || r.status === 'closed').length,
     bids: rfqs.reduce((sum, r) => sum + (r.bid_count || 0), 0),
     awarded: rfqs.filter(r => r.status === 'awarded').length,
+    completed: rfqs.filter(r => r.status === 'completed').length,
   };
 
   return (
@@ -93,12 +97,14 @@ export default function ClientDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
           {[
             { label: 'Total RFQs', value: stats.total, icon: <FileText size={17} strokeWidth={1.5} />, color: 'text-sky-400', bg: 'bg-sky-500/10' },
             { label: 'Open RFQs', value: stats.open, icon: <Clock size={17} strokeWidth={1.5} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+            { label: 'Closed', value: stats.closed, icon: <TrendingDown size={17} strokeWidth={1.5} />, color: 'text-slate-400', bg: 'bg-slate-500/10' },
             { label: 'Bids Received', value: stats.bids, icon: <TrendingUp size={17} strokeWidth={1.5} />, color: 'text-amber-400', bg: 'bg-amber-500/10' },
             { label: 'Awarded', value: stats.awarded, icon: <CheckCircle size={17} strokeWidth={1.5} />, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+            { label: 'Completed', value: stats.completed, icon: <CheckCircle size={17} strokeWidth={1.5} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
           ].map((s) => (
             <div key={s.label} data-testid={`stat-${s.label.toLowerCase().replace(/\s/g, '-')}`} className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4 hover:border-[#334155] transition-colors">
               <div className={`w-8 h-8 ${s.bg} rounded-sm flex items-center justify-center ${s.color} mb-3`}>{s.icon}</div>

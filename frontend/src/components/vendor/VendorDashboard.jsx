@@ -8,7 +8,9 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 
 const STATUS_STYLES = {
   submitted: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  shortlisted: 'bg-sky-500/10 text-sky-400 border border-sky-500/20',
   accepted: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  contract_signed: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
   rejected: 'bg-red-500/10 text-red-400 border border-red-500/20',
 };
 
@@ -37,7 +39,7 @@ export default function VendorDashboard() {
     ]).then(([bRes, rRes, pRes, mRes]) => {
       if (!mounted) return;
       setBids(bRes.data);
-      setOpenRFQs(rRes.data.slice(0, 5));
+      setOpenRFQs(rRes.data.slice(0, 8));
       setProfile(pRes.data);
       setMarketData(mRes.data);
     }).catch(console.error).finally(() => setLoading(false));
@@ -59,8 +61,10 @@ export default function VendorDashboard() {
 
   const stats = {
     totalBids: bids.length,
+    opportunities: openRFQs.length,
     active: bids.filter(b => b.status === 'submitted').length,
-    accepted: bids.filter(b => b.status === 'accepted').length,
+    shortlisted: bids.filter(b => b.status === 'shortlisted').length,
+    accepted: bids.filter(b => b.status === 'accepted' || b.status === 'contract_signed').length,
   };
 
   return (
@@ -81,10 +85,12 @@ export default function VendorDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
           {[
             { label: 'Total Bids', value: stats.totalBids, icon: <TrendingUp size={17} strokeWidth={1.5} />, color: 'text-sky-400', bg: 'bg-sky-500/10' },
+            { label: 'Open RFQs', value: stats.opportunities, icon: <Search size={17} strokeWidth={1.5} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
             { label: 'Pending', value: stats.active, icon: <Clock size={17} strokeWidth={1.5} />, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+            { label: 'Shortlisted', value: stats.shortlisted, icon: <CheckCircle size={17} strokeWidth={1.5} />, color: 'text-sky-400', bg: 'bg-sky-500/10' },
             { label: 'Accepted', value: stats.accepted, icon: <CheckCircle size={17} strokeWidth={1.5} />, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
           ].map(s => (
             <div key={s.label} data-testid={`vendor-stat-${s.label.toLowerCase()}`} className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
