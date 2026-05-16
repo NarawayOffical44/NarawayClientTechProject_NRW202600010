@@ -10,7 +10,7 @@
 
 ### 1.1(b) ✅ AI-Driven Bid Ranking Engine
 **Status:** Complete | **Files:** `/backend/src/utils/ai.js`
-- Groq API integration (mixtral-8x7b-32768)
+- Anthropic Claude Haiku integration for structured bid analysis
 - Structured JSON output with score (0-100), strengths, gaps, recommendations
 - Graceful fallback if AI unavailable
 - Endpoint: `POST /api/rfqs/:rfq_id/bids/rank`
@@ -39,7 +39,7 @@
 ### 1.1(f) ✅ 5G/6G Grid Balancing
 **Status:** Complete (Simulator) | **Files:** `/backend/src/routes/grid.js`, `/frontend/src/components/admin/GridMonitor.jsx`
 - Real-time grid telemetry simulation
-- Frequency, voltage, latency, renewable mix tracking
+- Frequency, voltage, latency, renewable mix, 4G/5G/6G tier, jitter, packet-loss, and failover tracking
 - 120-138 active edge nodes simulation
 - API: `GET /api/grid/status`
 
@@ -80,7 +80,7 @@ JWT_SECRET=<strong-random>   # JWT signing key (required - app fails to start wi
 ```
 RESEND_API_KEY=<api-key>     # Email notifications (if not set, logging only)
 SENDER_EMAIL=noreply@...     # Email sender address
-GROQ_API_KEY=<api-key>       # AI bid ranking (if not set, returns score=50)
+ANTHROPIC_API_KEY=<api-key>  # AI bid ranking (if not set, returns score=50)
 NODE_ENV=production          # Set to 'production' for security
 PORT=8000                    # Backend port
 CORS_ORIGINS=https://...     # Allowed origins (comma-separated)
@@ -100,7 +100,7 @@ REACT_APP_ENV=production                        # Environment flag
 
 ### External Services
 - **Email:** Resend API (optional, graceful degradation if not configured)
-- **AI:** Groq API (optional, graceful fallback to score=50)
+- **AI:** Anthropic Claude Haiku (optional, graceful fallback to score=50)
 - **OAuth:** Emergent OAuth provider configured
 - **Frontend Hosting:** Vercel or Netlify
 - **Backend Hosting:** AWS ECS, Railway, or Render
@@ -213,12 +213,12 @@ CMD ["node", "src/server.js"]
 ### Known Limitations
 - Grid Monitor is a simulator (replace with real NLDC SCADA in production)
 - Email requires RESEND_API_KEY (graceful fallback to logging)
-- AI bid ranking requires GROQ_API_KEY (graceful fallback to neutral score)
+- AI bid ranking requires ANTHROPIC_API_KEY (graceful fallback to neutral score)
 
 ### Tech Stack Summary
 - **Frontend:** React 18, React Router 7, Tailwind CSS, Radix UI, Recharts
 - **Backend:** Express.js, MongoDB (Mongoose), JWT, bcryptjs
-- **AI:** Groq API (mixtral-8x7b-32768)
+- **AI:** Anthropic Claude Haiku
 - **Email:** Resend
 - **Hosting:** Vercel/Netlify (frontend), AWS ECS/Railway/Render (backend)
 

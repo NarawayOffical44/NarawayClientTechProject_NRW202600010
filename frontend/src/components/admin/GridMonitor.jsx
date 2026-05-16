@@ -308,6 +308,38 @@ export default function GridMonitor() {
       </div>
 
       {/* ── Frequency Gauge + History Chart ────────────────────────────────── */}
+      {gridData?.control_plane && (
+        <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Radio size={14} className="text-sky-400" />
+            <h3 className="text-sm font-semibold text-white">Low-Latency Control Plane</h3>
+            <span className="ml-auto text-xs text-slate-600">{gridData.control_plane.gateway}</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="bg-[#1E293B]/40 rounded-sm p-3">
+              <div className="text-xs text-slate-500 mb-1">Slice</div>
+              <div className="text-xs font-semibold text-sky-400 uppercase">{gridData.control_plane.slice}</div>
+            </div>
+            <div className="bg-[#1E293B]/40 rounded-sm p-3">
+              <div className="text-xs text-slate-500 mb-1">SLA</div>
+              <div className="text-xs font-semibold text-white">&lt; {gridData.control_plane.sla_latency_ms?.toFixed(1)} ms</div>
+            </div>
+            <div className="bg-[#1E293B]/40 rounded-sm p-3">
+              <div className="text-xs text-slate-500 mb-1">Jitter</div>
+              <div className="text-xs font-semibold text-white">{gridData.control_plane.jitter_ms?.toFixed(3)} ms</div>
+            </div>
+            <div className="bg-[#1E293B]/40 rounded-sm p-3">
+              <div className="text-xs text-slate-500 mb-1">Packet Loss</div>
+              <div className="text-xs font-semibold text-white">{gridData.control_plane.packet_loss_pct?.toFixed(3)}%</div>
+            </div>
+            <div className="bg-[#1E293B]/40 rounded-sm p-3">
+              <div className="text-xs text-slate-500 mb-1">Failover</div>
+              <div className="text-xs font-semibold text-emerald-400">{gridData.control_plane.failover_ready ? 'Ready' : 'Check'}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-4">
         {/* Live frequency readout */}
         <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-5">

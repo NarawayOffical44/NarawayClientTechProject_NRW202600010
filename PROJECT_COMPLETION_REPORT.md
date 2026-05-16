@@ -13,7 +13,7 @@
 | # | Requirement | Status | Evidence |
 |---|-----------|--------|----------|
 | 1.1(a) | RFQ/Tendering Workflow | ✅ COMPLETE | `CreateRFQ.jsx`, `rfqs.js`, 4-step wizard |
-| 1.1(b) | AI-Driven Bid Ranking | ✅ COMPLETE | `ai.js` (Groq), real scoring metrics |
+| 1.1(b) | AI-Driven Bid Ranking | ✅ COMPLETE | `ai.js` (Claude), real scoring metrics |
 | 1.1(c) | Client Module | ✅ COMPLETE | `ClientDashboard.jsx`, RFQ management |
 | 1.1(d) | Vendor Module | ✅ COMPLETE | `VendorDashboard.jsx`, profile, bidding |
 | 1.1(e) | Admin Dashboard | ✅ COMPLETE | `AdminDashboard.jsx`, analytics, governance |
@@ -25,7 +25,7 @@
 ### Critical Fixes (10/10 Complete ✅)
 | # | Issue | Status | Impact |
 |---|-------|--------|--------|
-| 1 | Documentation Mismatch | ✅ FIXED | Accurate tech stack (Groq + MongoDB) |
+| 1 | Documentation Mismatch | ✅ FIXED | Accurate tech stack (Claude + MongoDB) |
 | 2 | Input Validation | ✅ FIXED | XSS/injection protection |
 | 3 | Real AI Scores | ✅ FIXED | Compliance/distance/reliability metrics |
 | 4 | Error Responses | ✅ FIXED | Standardized JSON format |
@@ -240,7 +240,7 @@
   - `POST /rfqs/:id/award/:bid_id` — Award contract to winning bid
   - `GET /rfqs/:id/bids` — List bids for RFQ
   - `POST /rfqs/:id/bids` — Submit bid ✅ Validated (price ≤ ceiling, qty ≤ requirement)
-  - `POST /rfqs/:id/bids/rank` — AI rank bids (Groq) ✅ Real compliance/distance/reliability scores
+  - `POST /rfqs/:id/bids/rank` — AI rank bids (Claude) ✅ Real compliance/distance/reliability scores
   - `GET /rfqs/:id/bids/comparison` — Vendor comparison table
   - `PATCH /bids/:id/shortlist` — Toggle shortlist
 - **Validation:** ✅ ALL inputs validated and sanitized
@@ -319,7 +319,7 @@
 - **Status:** PRODUCTION READY
 
 #### ✅ AI Ranking Engine (`utils/ai.js`)
-- **Provider:** Groq API (mixtral-8x7b-32768)
+- **Provider:** Anthropic Claude Haiku
 - **Prompt:** Structured JSON for deterministic output
 - **Input:** RFQ + bids
 - **Output:**
@@ -342,7 +342,7 @@
   - **Compliance Score:** Vendor certs + verification status (0-100)
   - **Reliability Score:** Bid acceptance + contract completion rates (40-100)
   - **Distance Score:** Vendor location vs RFQ location (70-95)
-- **Fallback:** If Groq fails, returns neutral scores (score=50, no crash)
+- **Fallback:** If AI provider is unavailable, returns neutral scores (score=50, no crash)
 - **Status:** PRODUCTION READY
 
 #### ✅ Email Service (`utils/email.js`)
@@ -442,7 +442,7 @@
 - `.env.production` — Production secrets
 - **Variables:**
   - MONGO_URL, JWT_SECRET, PORT, NODE_ENV
-  - GROQ_API_KEY, RESEND_API_KEY, CORS_ORIGINS
+  - ANTHROPIC_API_KEY, RESEND_API_KEY, CORS_ORIGINS
   - COOKIE_NAME
 
 #### ✅ Package Management
@@ -566,7 +566,7 @@
                         └────────────────────┘
 
                         ┌──────────────────┐
-                        │  Groq API        │
+                        │  Claude API      │
                         │  (Bid Ranking)   │
                         └──────────────────┘
 
@@ -649,7 +649,7 @@
 | **Database Query Time** | 10-50ms (with indexes) |
 | **Frontend Bundle Size** | ~400KB (gzipped) |
 | **Page Load Time** | 1-2s (3G) |
-| **AI Ranking Time** | 2-5s (Groq API) |
+| **AI Ranking Time** | 2-5s (Claude API) |
 | **Rate Limit** | 200 req/15 min (global), 5/15 min (auth) |
 
 ### Security Metrics
@@ -680,7 +680,7 @@
 | Service | Provider | Cost | Status |
 |---------|----------|------|--------|
 | **Cloud Database** | MongoDB Atlas | FREE (MVP) / $50+ | ✅ Active |
-| **AI Bid Ranking** | Groq API | FREE (MVP) / $50+ | ✅ Active |
+| **AI Bid Ranking** | Anthropic Claude | Usage-based | ✅ Active |
 | **Email Service** | Resend | FREE (MVP) / $20+ | ✅ Active |
 | **Frontend Hosting** | Vercel | FREE / $20+ | ✅ Ready |
 | **Backend Hosting** | Railway / Render | FREE / $10+ | ✅ Ready |
@@ -758,4 +758,3 @@ All 9 scope items have been implemented, tested, and deployed. 10 critical secur
 **Report Compiled By:** Claude Code (Naraway Development Team)
 **Date:** March 16, 2026
 **Next Review:** April 16, 2026
-

@@ -344,7 +344,7 @@ async function rankRFQBids(req, res) {
   const bids = await Bid.find({ rfq_id: rfq.rfq_id }).lean();
   if (!bids.length) return sendError(res, 400, 'No bids to rank');
 
-  // Get Groq AI ranking
+  // Get AI ranking from configured provider, with fallback if unavailable.
   const aiResult = await rankBids(rfq, bids);
 
   // Calculate and persist real scores for each bid

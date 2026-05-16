@@ -35,7 +35,7 @@
 - Scoring criteria: Price competitiveness, Quantity match, Delivery timeline, Vendor reliability
 - Output: Score (0-100), Strengths, Gaps, Recommendations
 - Graceful fallback: Returns neutral score=50 if AI unavailable
-- AI Provider: Groq API (mixtral-8x7b-32768) - fast, cost-effective
+- AI Provider: Anthropic Claude Haiku - structured JSON bid ranking with graceful fallback
 
 **Files:**
 - Backend: `backend/src/utils/ai.js`
@@ -182,7 +182,7 @@
 **Real-Time Grid Telemetry:**
 - Frequency monitoring: India nominal 50.0 Hz (±0.40 Hz deviation detection)
 - Voltage tracking: 220 kV (±3 kV variation)
-- Latency measurement: 0.28–0.95 ms (5G/6G edge gateway simulation)
+- Latency measurement: 0.28-0.95 ms for the primary 6G edge gateway, with 5G NR and 4G fallback tiers
 - Grid stability states: stable | warning | critical
 
 **Renewable Energy Mix:**
@@ -200,9 +200,10 @@
 - Live heatmap of grid stress
 
 **Active Edge Nodes:**
-- 120–138 5G/6G mesh nodes across all regions
+- 4G/5G/6G mesh node breakdown across North, South, West, and East India regions
 - Node location data
 - Latency per node
+- URLLC control-plane metrics: jitter, packet loss, sync accuracy, SLA, and failover state
 - Auto-balancing triggers for frequency stabilization
 
 **Live Events Feed:**
@@ -447,7 +448,7 @@
 | # | Item | Status | Type | Location |
 |---|------|--------|------|----------|
 | a | RFQ/Tender Marketplace | ✅ Complete | Core Platform | Backend RFQs routes + Frontend Client module |
-| b | AI Bid Ranking & Gap Analysis | ✅ Complete | AI/ML | Backend Groq API integration |
+| b | AI Bid Ranking & Gap Analysis | ✅ Complete | AI/ML | Backend Anthropic Claude integration |
 | c | Client Module with Filters | ✅ Complete | Frontend UI | Client Dashboard, CreateRFQ, RFQDetail |
 | d | Vendor Module with Bidding | ✅ Complete | Frontend UI | Vendor Dashboard, Profile, Marketplace, Bidding |
 | e | Admin Dashboard & Governance | ✅ Complete | Frontend UI + Backend | AdminDashboard (5 tabs), Admin routes |

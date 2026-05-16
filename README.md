@@ -86,12 +86,12 @@ Renergizr solves this by providing:
 - Dark industrial design system  
 
 **Backend**
-- FastAPI (Python 3.11)  
-- MongoDB (Motor async driver)  
+- Express.js (Node.js)
+- MongoDB (Mongoose)
 - JWT-based authentication  
 
 **AI Engine**
-- Gemini 2.0 Flash  
+- Anthropic Claude Haiku
 - Bid ranking and gap analysis  
 
 **Integrations**
