@@ -52,7 +52,8 @@ app.use(helmet({ contentSecurityPolicy: false }));
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001,https://narawayclienttechproject-nrw202600010.onrender.com').split(',').map(s => s.trim());
 app.use(cors({
   origin:      (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin || '');
+    if (!origin || isLocalhost || allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,   // required for cookie-based auth

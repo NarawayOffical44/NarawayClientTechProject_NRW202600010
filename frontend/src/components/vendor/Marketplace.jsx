@@ -26,10 +26,11 @@ export default function Marketplace() {
       .finally(() => setLoading(false));
   }, [filterType]);
 
-  const filtered = rfqs.filter(r =>
-    r.title.toLowerCase().includes(search.toLowerCase()) ||
-    r.delivery_location.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = rfqs.filter(r => {
+    const q = search.toLowerCase();
+    return (r.title || '').toLowerCase().includes(q) ||
+      (r.delivery_location || '').toLowerCase().includes(q);
+  });
 
   return (
     <div className="min-h-screen bg-[#020617]">
