@@ -13,15 +13,16 @@ const Contact = mongoose.models.Contact || mongoose.model('Contact', new mongoos
   name:       { type: String, required: true },
   email:      { type: String, required: true },
   company:    { type: String },
+  interest:   { type: String },
   message:    { type: String, required: true },
   status:     { type: String, default: 'new' },
 }, { timestamps: true }), 'contacts');
 
 router.post('/', asyncHandler(async (req, res) => {
-  const { name, email, company, message } = req.body;
+  const { name, email, company, interest, message } = req.body;
   if (!name || !email || !message) return sendError(res, 400, 'name, email and message are required');
 
-  await Contact.create({ contact_id: generateId('cnt_'), name, email, company, message });
+  await Contact.create({ contact_id: generateId('cnt_'), name, email, company, interest, message });
   return res.json({ success: true, message: 'Thank you! We will be in touch shortly.' });
 }));
 

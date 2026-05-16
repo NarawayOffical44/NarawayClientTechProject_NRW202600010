@@ -244,7 +244,7 @@ export default function GridMonitor() {
             <Radio size={16} className="text-sky-400" />
           </div>
           <div>
-            <h2 className="font-['Chivo'] font-bold text-base text-white">5G/6G Grid Balancing Monitor</h2>
+            <h2 className="font-['Chivo'] font-bold text-base text-white">4G/5G/6G Grid Balancing Monitor</h2>
             <p className="text-xs text-slate-500">Simulated low-latency telemetry · polling every {POLL_MS / 1000}s</p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function GridMonitor() {
           <span className="font-['JetBrains_Mono',monospace] text-sm font-bold text-sky-400">
             {gridData?.latency_ms?.toFixed(2)} ms
           </span>
-          <span className="text-xs text-slate-600">5G/6G latency</span>
+          <span className="text-xs text-slate-600">{gridData?.network_type || '6G'} latency</span>
         </div>
       </div>
 
@@ -276,10 +276,12 @@ export default function GridMonitor() {
         <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
           <div className="flex items-center gap-2 mb-2">
             <Cpu size={14} className="text-sky-400" />
-            <span className="text-xs text-slate-500">5G/6G Nodes</span>
+            <span className="text-xs text-slate-500">Network Nodes</span>
           </div>
           <div className="font-['Chivo'] font-bold text-lg text-sky-400">{gridData?.active_nodes}</div>
-          <div className="text-xs text-slate-600 mt-0.5">edge nodes connected</div>
+          <div className="text-xs text-slate-600 mt-0.5">
+            4G: {gridData?.network_tiers?.['4G_nodes'] ?? '—'} · 5G: {gridData?.network_tiers?.['5G_nodes'] ?? '—'} · 6G: {gridData?.network_tiers?.['6G_nodes'] ?? '—'}
+          </div>
         </div>
 
         {/* Total load */}
@@ -394,7 +396,7 @@ export default function GridMonitor() {
         <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-5">
           <div className="flex items-center gap-2 mb-4">
             <Wifi size={14} className="text-sky-400" />
-            <h3 className="text-sm font-semibold text-white">Regional Load Distribution — 5G/6G Node Network</h3>
+            <h3 className="text-sm font-semibold text-white">Regional Load Distribution — 4G/5G/6G Node Network</h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {gridData.regions.map(r => (
@@ -414,8 +416,9 @@ export default function GridMonitor() {
                 </div>
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>{r.load_mw} MW</span>
-                  <span>{r.nodes} nodes</span>
+                  <span className="text-sky-500">{r.network_type || '5G NR'}</span>
                 </div>
+                <div className="text-xs text-slate-600 mt-1">{r.nodes} nodes · {r.latency_ms?.toFixed(1)} ms</div>
               </div>
             ))}
           </div>

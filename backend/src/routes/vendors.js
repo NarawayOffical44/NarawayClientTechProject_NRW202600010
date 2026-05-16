@@ -10,6 +10,7 @@
 const express = require('express');
 const router  = express.Router();
 const VendorProfile = require('../models/VendorProfile');
+const RFQ = require('../models/RFQ');
 const mongoose = require('mongoose');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { generateId, asyncHandler, sendError } = require('../utils/helpers');
@@ -23,11 +24,23 @@ const VendorDoc = mongoose.models.VendorDocument || mongoose.model('VendorDocume
   doc_type:    { type: String, required: true },
   filename:    { type: String },
   content_type:{ type: String },
+  size_bytes:  { type: Number, default: 0 },
   data:        { type: String },   // base64 encoded file content
   status:      { type: String, default: 'pending' },
 }, { timestamps: true }), 'vendor_documents');
 
 const Bid = require('../models/Bid');
+
+function serializeProfile(profile) {
+  if (!profile) return profile;
+  const plain = typeof profile.toObject === 'function' ? profile.toObject() : profile;
+  return {
+    ...plain,
+    carbon_credits: plain.carbon_credits ?? plain.carbon_credits_ccts ?? 0,
+    contact_email: plain.contact_email ?? '',
+    regulatory_docs: plain.regulatory_docs ?? [],
+  };
+}
 
 // GET /api/vendor/profile
 router.get('/profile', requireAuth, requireRole('vendor'), asyncHandler(async (req, res) => {
@@ -38,32 +51,39 @@ router.get('/profile', requireAuth, requireRole('vendor'), asyncHandler(async (r
       vendor_id:    generateId('vnd_'),
       user_id:      req.user.user_id,
       company_name: req.user.name,
+      contact_email: req.user.email,
     });
   }
-  return res.json(profile);
+  return res.json(serializeProfile(profile));
 }));
 
 // PUT /api/vendor/profile
 router.put('/profile', requireAuth, requireRole('vendor'), asyncHandler(async (req, res) => {
   const allowed = [
     'company_name', 'description', 'location', 'website',
-    'contact_person', 'contact_phone', 'energy_types',
-    'capacity_mw', 'carbon_credits_ccts', 'certifications',
+    'contact_person', 'contact_email', 'contact_phone', 'energy_types',
+    'capacity_mw', 'carbon_credits', 'carbon_credits_ccts', 'certifications',
+    'regulatory_docs',
   ];
   const updates = {};
   allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+  if (updates.carbon_credits !== undefined) {
+    updates.carbon_credits_ccts = updates.carbon_credits;
+    delete updates.carbon_credits;
+  }
 
   const profile = await VendorProfile.findOneAndUpdate(
     { user_id: req.user.user_id },
-    { $set: updates },
+    { $set: updates, $setOnInsert: { vendor_id: generateId('vnd_'), user_id: req.user.user_id } },
     { new: true, upsert: true }
   );
-  return res.json(profile);
+  return res.json(serializeProfile(profile));
 }));
 
 // POST /api/vendor/documents — base64 file upload
-router.post('/documents', requireAuth, requireRole('vendor'), asyncHandler(async (req, res) => {
-  const { doc_type, filename, content_type, data } = req.body;
+async function uploadDocument(req, res) {
+  const { doc_type, filename, content_type, size_bytes } = req.body;
+  const data = req.body.data ?? req.body.data_base64;
   if (!doc_type || !data) return sendError(res, 400, 'doc_type and data are required');
 
   // Enforce ~10MB limit on base64 data
@@ -75,12 +95,19 @@ router.post('/documents', requireAuth, requireRole('vendor'), asyncHandler(async
   // Upsert: one document per type per vendor
   const doc = await VendorDoc.findOneAndUpdate(
     { vendor_id: profile.vendor_id, doc_type },
-    { $set: { doc_id: generateId('doc_'), user_id: req.user.user_id, filename, content_type, data, status: 'pending' } },
+    { $set: { doc_id: generateId('doc_'), user_id: req.user.user_id, filename, content_type, size_bytes, data, status: 'pending' } },
     { new: true, upsert: true }
+  );
+  await VendorProfile.updateOne(
+    { user_id: req.user.user_id },
+    { $addToSet: { regulatory_docs: doc_type } }
   );
   const { data: _, ...safe } = doc.toObject();  // never return base64 in list
   return res.status(201).json(safe);
-}));
+}
+
+router.post('/documents', requireAuth, requireRole('vendor'), asyncHandler(uploadDocument));
+router.post('/documents/upload', requireAuth, requireRole('vendor'), asyncHandler(uploadDocument));
 
 // GET /api/vendor/documents
 router.get('/documents', requireAuth, requireRole('vendor'), asyncHandler(async (req, res) => {
@@ -94,7 +121,13 @@ router.get('/documents', requireAuth, requireRole('vendor'), asyncHandler(async 
 // GET /api/vendor/bids — vendor's own bids across all RFQs
 router.get('/bids', requireAuth, requireRole('vendor'), asyncHandler(async (req, res) => {
   const bids = await Bid.find({ vendor_id: req.user.user_id }).sort({ createdAt: -1 }).lean();
-  return res.json(bids);
+  const enriched = await Promise.all(bids.map(async bid => {
+    const rfq = await RFQ.findOne({ rfq_id: bid.rfq_id })
+      .select('rfq_id title energy_type delivery_location status quantity_mw')
+      .lean();
+    return { ...bid, rfq };
+  }));
+  return res.json(enriched);
 }));
 
 module.exports = router;

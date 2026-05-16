@@ -42,12 +42,12 @@ const COOKIE_OPTS = {
   httpOnly:  true,
   sameSite:  'lax',
   secure:    process.env.NODE_ENV === 'production',
-  maxAge:    90 * 24 * 60 * 60 * 1000,  // 90 days in ms
+  maxAge:    7 * 24 * 60 * 60 * 1000,  // 7 days in ms (matches JWT expiry)
 };
 
 /** Sign a JWT for a user */
 function signToken(user) {
-  return jwt.sign({ user_id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
+  return jwt.sign({ user_id: user.user_id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 }
 
 /** Strip password from user object before sending to client */
@@ -56,40 +56,6 @@ function safeUser(user) {
   return safe;
 }
 
-// POST /api/auth/register
-// router.post('/register', asyncHandler(async (req, res) => {
-//   const { name, email, password, role = 'client', company = '' } = req.body;
-//   console.log(req.body)
-//   if (!name || !email || !password) return sendError(res, 400, 'name, email and password are required');
-//   if (!['client', 'vendor'].includes(role)) return sendError(res, 400, 'role must be client or vendor');
-
-//   const existing = await User.findOne({ email: email.toLowerCase() });
-//   if (existing) return sendError(res, 400, 'Email already registered');
-
-//   const hashed = await bcrypt.hash(password, 12);
-//   const user = await User.create({
-//     user_id:  generateId('usr_'),
-//     name,
-//     email:    email.toLowerCase(),
-//     password: hashed,
-//     role,
-//     company,
-//   });
-
-//   // Auto-create vendor profile so /api/vendor/profile always has a record
-//   if (role === 'vendor') {
-//     await VendorProfile.create({
-//       vendor_id:    generateId('vnd_'),
-//       user_id:      user.user_id,
-//       company_name: company || name,
-//     });
-//   }
-
-//   const token = signToken(user);
-//   res.cookie(COOKIE_NAME, token, COOKIE_OPTS);
-//   // return res.status(201).json(safeUser(user));
-//   return res.status(201).json({ user: safeUser(user) });
-// }));
 
 router.post('/register', authLimiter, asyncHandler(async (req, res) => {
   const { name, email, password, role = 'client', company = '' } = req.body;
@@ -221,10 +187,10 @@ router.post('/google/session', asyncHandler(async (req, res) => {
   const { session_id, role = 'client' } = req.body;
   if (!session_id) return sendError(res, 400, 'session_id required');
 
-  // Exchange session_id for user profile via Emergent API
+  // Exchange session_id for user profile via Emergent OAuth session API
   const emergentRes = await axios.get(
-    `https://auth.emergent.sh/session/${session_id}`,
-    { timeout: 10000 }
+    'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data',
+    { headers: { 'X-Session-ID': session_id }, timeout: 10000 }
   );
   const profile = emergentRes.data;
   if (!profile?.email) return sendError(res, 400, 'Invalid Emergent session');

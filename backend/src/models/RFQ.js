@@ -37,11 +37,16 @@ const rfqSchema = new mongoose.Schema({
   price_ceiling:        { type: Number },    // ₹/kWh
   payment_terms:        { type: String },
   advance_payment_pct:  { type: Number, default: 0 },
+  carbon_credits_tco2e: { type: Number },
 
   // Lifecycle
   status:               { type: String, enum: ['draft', 'open', 'bidding_closed', 'awarded', 'completed', 'cancelled'], default: 'open' },
   awarded_bid_id:       { type: String },
+  contract_id:          { type: String },
   bid_count:            { type: Number, default: 0 },
 }, { timestamps: true });
+
+rfqSchema.index({ client_id: 1, status: 1 });
+rfqSchema.index({ energy_type: 1, status: 1 });
 
 module.exports = mongoose.model('RFQ', rfqSchema, 'rfqs');

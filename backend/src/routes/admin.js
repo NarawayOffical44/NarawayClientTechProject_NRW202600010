@@ -21,6 +21,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const { generateId, asyncHandler, sendError } = require('../utils/helpers');
 const { sendVendorVerified } = require('../utils/email');
 const { auditLog, getAuditLogs } = require('../utils/audit');
+const { serializeRFQs } = require('../utils/rfq');
 
 // All admin routes require admin role
 router.use(requireAuth, requireRole('admin'));
@@ -131,7 +132,7 @@ router.get('/vendors', asyncHandler(async (req, res) => {
 // GET /api/admin/rfqs
 router.get('/rfqs', asyncHandler(async (req, res) => {
   const rfqs = await RFQ.find().sort({ createdAt: -1 }).lean();
-  return res.json(rfqs);
+  return res.json(serializeRFQs(rfqs));
 }));
 
 // GET /api/admin/contracts

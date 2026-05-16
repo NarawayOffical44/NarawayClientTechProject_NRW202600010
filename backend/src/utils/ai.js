@@ -1,9 +1,9 @@
 /**
- * utils/ai.js — Groq AI integration
+ * utils/ai.js — Claude Haiku AI integration
  *
  * MOU Scope 1.1.b: "AI-driven bid ranking and gap analysis engine"
  *
- * Uses Groq API (mixtral-8x7b-32768) — fast, cost-efficient, open-source,
+ * Uses Anthropic Claude Haiku (claude-haiku-4-5-20251001) — fast, cost-efficient,
  * ideal for structured JSON analysis tasks like bid ranking.
  *
  * Developer note (Naraway team):
@@ -12,13 +12,15 @@
  *   If the AI call fails, a graceful fallback returns score=50 for all bids.
  */
 
-const axios = require('axios');
+const Anthropic = require('@anthropic-ai/sdk');
 const logger = require('./logger');
 
-// Groq API endpoint and model
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const AI_MODEL = 'mixtral-8x7b-32768';
+// Claude Haiku — AI bid ranking model (MOU Scope 1.1.b)
+const AI_MODEL = 'claude-haiku-4-5-20251001';
+
+function getAnthropicClient() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
 
 const Bid = require('../models/Bid');
 const Contract = require('../models/Contract');
@@ -32,7 +34,7 @@ const VendorProfile = require('../models/VendorProfile');
  */
 async function calculateComplianceScore(vendor_id) {
   try {
-    const vendor = await VendorProfile.findOne({ vendor_id }).lean();
+    const vendor = await VendorProfile.findOne({ $or: [{ vendor_id }, { user_id: vendor_id }] }).lean();
     if (!vendor) return 50; // unknown vendor = baseline
 
     let score = 50; // baseline
@@ -180,27 +182,16 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
 }`;
 
   try {
-    const response = await axios.post(
-      GROQ_API_URL,
-      {
-        model: AI_MODEL,
-        messages: [
-          { role: 'system', content: 'You are an expert energy procurement analyst. Always respond with valid JSON only.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 1024,
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const client = getAnthropicClient();
+    const message = await client.messages.create({
+      model: AI_MODEL,
+      max_tokens: 1024,
+      system: 'You are an expert energy procurement analyst. Always respond with valid JSON only.',
+      messages: [{ role: 'user', content: prompt }],
+    });
 
-    // Extract text content from Groq response
-    const raw = response.data.choices[0]?.message?.content || '';
+    // Extract text content from Claude response
+    const raw = message.content[0]?.text || '';
 
     // Strip any accidental markdown code fences
     const clean = raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim();

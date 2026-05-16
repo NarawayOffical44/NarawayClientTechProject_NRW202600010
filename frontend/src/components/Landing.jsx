@@ -147,7 +147,7 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false);
 
   // ── Contact form state (Scope 1.1.i — company website contact)
-  const [contact, setContact] = useState({ name: '', email: '', company: '', message: '' });
+  const [contact, setContact] = useState({ name: '', email: '', company: '', interest: '', message: '' });
   const [contactStatus, setContactStatus] = useState('idle'); // 'idle' | 'sending' | 'success' | 'error'
 
   // ── JSON-LD Organisation schema (SEO — Scope 1.1.h)
@@ -179,7 +179,7 @@ export default function Landing() {
     try {
       await axios.post(`${API}/contact`, contact);
       setContactStatus('success');
-      setContact({ name: '', email: '', company: '', message: '' });
+      setContact({ name: '', email: '', company: '', interest: '', message: '' });
     } catch {
       setContactStatus('error');
     }
@@ -586,13 +586,13 @@ export default function Landing() {
                 <input data-testid="contact-name" type="text" placeholder="Name" required value={contact.name} onChange={e => setContact(p => ({...p, name: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
                 <input data-testid="contact-email" type="email" placeholder="Work Email" required value={contact.email} onChange={e => setContact(p => ({...p, email: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
                 <input type="text" placeholder="Company (optional)" value={contact.company} onChange={e => setContact(p => ({...p, company: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors" />
-                <select className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-slate-400 px-4 py-3 rounded-sm text-sm outline-none transition-colors">
-                  <option>Interested in...</option>
-                  <option>Energy Buyer — Post RFQs</option>
-                  <option>Energy Vendor — Bid on Projects</option>
-                  <option>Platform Demo</option>
-                  <option>Enterprise Plan</option>
-                  <option>Carbon Credits Integration</option>
+                <select value={contact.interest} onChange={e => setContact(p => ({...p, interest: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-slate-400 px-4 py-3 rounded-sm text-sm outline-none transition-colors">
+                  <option value="">Interested in...</option>
+                  <option value="Energy Buyer — Post RFQs">Energy Buyer — Post RFQs</option>
+                  <option value="Energy Vendor — Bid on Projects">Energy Vendor — Bid on Projects</option>
+                  <option value="Platform Demo">Platform Demo</option>
+                  <option value="Enterprise Plan">Enterprise Plan</option>
+                  <option value="Carbon Credits Integration">Carbon Credits Integration</option>
                 </select>
                 <textarea data-testid="contact-message" rows={3} placeholder="Message" required value={contact.message} onChange={e => setContact(p => ({...p, message: e.target.value}))} className="w-full bg-[#0F172A] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-4 py-3 rounded-sm text-sm outline-none transition-colors resize-none" />
                 {contactStatus === 'success' && <p className="text-emerald-400 text-xs font-semibold">Message sent! We'll be in touch shortly.</p>}

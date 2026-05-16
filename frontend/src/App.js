@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { Toaster } from 'sonner';
 import './App.css';
 
 import Landing from './components/Landing';
@@ -148,6 +149,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRouter />
+        <Toaster richColors position="top-right" />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -12,16 +12,18 @@ const bidSchema = new mongoose.Schema({
   vendor_id:        { type: String, required: true, index: true },
   vendor_name:      { type: String },
   vendor_company:   { type: String },
+  vendor_location:  { type: String },
 
   // Bid details submitted by vendor
-  price_per_unit:   { type: Number, required: true },  // ₹/kWh
-  quantity_mw:      { type: Number, required: true },
+  price_per_unit:   { type: Number, required: true, min: [0.0001, 'Price must be greater than 0'] },  // ₹/kWh
+  quantity_mw:      { type: Number, required: true, min: [0.001, 'Quantity must be greater than 0'] },
   delivery_timeline: { type: String },
   notes:            { type: String },
 
   // Lifecycle
   status:           { type: String, enum: ['submitted', 'shortlisted', 'accepted', 'rejected', 'contract_signed', 'contract_declined'], default: 'submitted' },
   is_shortlisted:   { type: Boolean, default: false },
+  contract_id:      { type: String },
 
   // AI ranking results (Scope 1.1.b — populated by /bids/rank endpoint)
   ai_score:         { type: Number },
@@ -35,6 +37,7 @@ const bidSchema = new mongoose.Schema({
   vendor_certifications:   [{ type: String }],
   vendor_carbon_credits:   { type: Number, default: 0 },
   vendor_verification_status: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },
+  vendor_verification: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },
 
   // Scoring metrics (Scope 1.1.b — AI matching engine)
   compliance_score:        { type: Number },      // 0-100, based on certifications & vendor status

@@ -21,6 +21,7 @@ const vendorProfileSchema = new mongoose.Schema({
   location:            { type: String, default: '' },
   website:             { type: String, default: '' },
   contact_person:      { type: String, default: '' },
+  contact_email:       { type: String, default: '' },
   contact_phone:       { type: String, default: '' },
 
   // Tab 2 — Energy & Capacity
@@ -30,6 +31,7 @@ const vendorProfileSchema = new mongoose.Schema({
 
   // Tab 3 — Compliance
   certifications:      [{ type: String }],
+  regulatory_docs:     [{ type: String }],
 
   // Admin governance (Scope 1.1.g)
   verification_status: { type: String, enum: ['pending', 'verified', 'rejected'], default: 'pending' },

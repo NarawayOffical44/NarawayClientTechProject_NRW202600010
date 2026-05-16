@@ -33,6 +33,7 @@ function sendError(res, status, message, details = null) {
   return res.status(status).json({
     error: true,
     message,
+    detail: message,
     ...(details && { details }),
     timestamp: new Date().toISOString(),
   });

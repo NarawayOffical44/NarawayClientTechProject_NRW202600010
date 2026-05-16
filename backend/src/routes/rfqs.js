@@ -26,6 +26,46 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const { generateId, asyncHandler, sendError, sanitizeString, validatePrice, validateQuantity } = require('../utils/helpers');
 const { rankBids, calculateComplianceScore, calculateVendorReliability, calculateDistanceFeasibility, enrichBidsWithScores } = require('../utils/ai');
 const { sendNewBid, sendContractAwarded } = require('../utils/email');
+const { serializeRFQ, serializeRFQs } = require('../utils/rfq');
+const logger = require('../utils/logger');
+
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
+function parseOptionalNumber(value) {
+  return hasValue(value) ? parseFloat(value) : null;
+}
+
+function normalizeRFQInput(body = {}) {
+  const specs = body.specs || {};
+  const financialTerms = body.financial_terms || {};
+  return {
+    title: body.title,
+    description: body.description,
+    energy_type: body.energy_type,
+    quantity_mw: body.quantity_mw,
+    voltage_kv: body.voltage_kv ?? specs.voltage_kv,
+    phase: body.phase ?? specs.phase,
+    add_on_services: Array.isArray(body.add_on_services) ? body.add_on_services : [],
+    delivery_location: body.delivery_location,
+    delivery_start_date: body.delivery_start_date ?? body.start_date,
+    delivery_end_date: body.delivery_end_date ?? body.end_date,
+    price_ceiling: body.price_ceiling,
+    payment_terms: body.payment_terms ?? financialTerms.payment_terms,
+    advance_payment_pct: body.advance_payment_pct ?? body.advance_percent ?? financialTerms.advance_payment_pct ?? financialTerms.advance_percent,
+    carbon_credits_tco2e: body.carbon_credits_tco2e,
+  };
+}
+
+function serializeBid(bid) {
+  if (!bid) return bid;
+  return {
+    ...bid,
+    vendor_location: bid.vendor_location || '',
+    vendor_verification: bid.vendor_verification || bid.vendor_verification_status || 'pending',
+  };
+}
 
 // ── Helper: create a notification in the DB ────────────────────────────────
 async function notify(userId, type, message, relatedId = null) {
@@ -37,7 +77,7 @@ async function notify(userId, type, message, relatedId = null) {
       message,
       related_id: relatedId,
     });
-  } catch (e) { /* non-blocking */ }
+  } catch (e) { logger.warn(`Notification failed for user ${userId}: ${e.message}`); }
 }
 
 // GET /api/rfqs
@@ -45,18 +85,24 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
   let query = {};
   if (req.user.role === 'client') query.client_id = req.user.user_id;
   else if (req.user.role === 'vendor') query.status = 'open';
+  if (req.query.status && req.user.role !== 'vendor') query.status = req.query.status;
+  if (req.query.energy_type) query.energy_type = req.query.energy_type;
 
   const rfqs = await RFQ.find(query).sort({ createdAt: -1 }).lean();
-  return res.json(rfqs);
+  return res.json(serializeRFQs(rfqs));
 }));
 
 // POST /api/rfqs
 router.post('/', requireAuth, requireRole('client'), asyncHandler(async (req, res) => {
-  const { title, description, energy_type, quantity_mw, voltage_kv, delivery_location, delivery_start_date, delivery_end_date, price_ceiling, payment_terms, advance_payment_pct } = req.body;
+  const {
+    title, description, energy_type, quantity_mw, voltage_kv, phase, add_on_services,
+    delivery_location, delivery_start_date, delivery_end_date, price_ceiling,
+    payment_terms, advance_payment_pct, carbon_credits_tco2e,
+  } = normalizeRFQInput(req.body);
 
   // Validation
-  if (!title || !energy_type || !quantity_mw || !delivery_location || !price_ceiling) {
-    return sendError(res, 400, 'Missing required fields: title, energy_type, quantity_mw, delivery_location, price_ceiling');
+  if (!title || !energy_type || !quantity_mw || !delivery_location) {
+    return sendError(res, 400, 'Missing required fields: title, energy_type, quantity_mw, delivery_location');
   }
   if (!['solar', 'wind', 'hydro', 'thermal', 'green_hydrogen'].includes(energy_type)) {
     return sendError(res, 400, 'Invalid energy_type');
@@ -64,7 +110,7 @@ router.post('/', requireAuth, requireRole('client'), asyncHandler(async (req, re
   if (!validateQuantity(quantity_mw)) {
     return sendError(res, 400, 'Invalid quantity_mw: must be positive number');
   }
-  if (!validatePrice(price_ceiling)) {
+  if (hasValue(price_ceiling) && !validatePrice(price_ceiling)) {
     return sendError(res, 400, 'Invalid price_ceiling: must be 0-99999.9999');
   }
 
@@ -77,23 +123,38 @@ router.post('/', requireAuth, requireRole('client'), asyncHandler(async (req, re
     description: sanitizeString(description, 2000),
     energy_type,
     quantity_mw: parseFloat(quantity_mw),
-    voltage_kv: voltage_kv ? parseFloat(voltage_kv) : null,
+    voltage_kv: parseOptionalNumber(voltage_kv),
+    phase: sanitizeString(phase, 100),
+    add_on_services: add_on_services.map(s => sanitizeString(s, 100)).filter(Boolean),
     delivery_location: sanitizeString(delivery_location, 500),
     delivery_start_date,
     delivery_end_date,
-    price_ceiling: parseFloat(price_ceiling),
+    price_ceiling: parseOptionalNumber(price_ceiling),
     payment_terms: sanitizeString(payment_terms, 500),
-    advance_payment_pct: advance_payment_pct ? parseFloat(advance_payment_pct) : 0,
+    advance_payment_pct: parseOptionalNumber(advance_payment_pct) || 0,
+    carbon_credits_tco2e: parseOptionalNumber(carbon_credits_tco2e),
     status: 'open',
   });
-  return res.status(201).json(rfq);
+  return res.status(201).json(serializeRFQ(rfq));
 }));
 
 // GET /api/rfqs/:rfq_id
 router.get('/:rfq_id', requireAuth, asyncHandler(async (req, res) => {
   const rfq = await RFQ.findOne({ rfq_id: req.params.rfq_id }).lean();
   if (!rfq) return sendError(res, 404, 'RFQ not found');
-  return res.json(rfq);
+  return res.json(serializeRFQ(rfq));
+}));
+
+router.patch('/:rfq_id/status', requireAuth, asyncHandler(async (req, res) => {
+  const rfq = await RFQ.findOne({ rfq_id: req.params.rfq_id });
+  if (!rfq) return sendError(res, 404, 'RFQ not found');
+  if (rfq.client_id !== req.user.user_id && req.user.role !== 'admin')
+    return sendError(res, 403, 'Not your RFQ');
+  if (!req.body.status) return sendError(res, 400, 'status is required');
+
+  rfq.status = req.body.status;
+  await rfq.save();
+  return res.json(serializeRFQ(rfq));
 }));
 
 // PATCH /api/rfqs/:rfq_id
@@ -106,7 +167,7 @@ router.patch('/:rfq_id', requireAuth, asyncHandler(async (req, res) => {
   const allowed = ['title', 'description', 'status', 'delivery_location', 'price_ceiling'];
   allowed.forEach(f => { if (req.body[f] !== undefined) rfq[f] = req.body[f]; });
   await rfq.save();
-  return res.json(rfq);
+  return res.json(serializeRFQ(rfq));
 }));
 
 // POST /api/rfqs/:rfq_id/close-bidding
@@ -125,7 +186,7 @@ router.post('/:rfq_id/close-bidding', requireAuth, requireRole('client'), asyncH
     await notify(b.vendor_id, 'bidding_closed', `Bidding has closed on "${rfq.title}"`, rfq.rfq_id);
   }
 
-  return res.json(rfq);
+  return res.json(serializeRFQ(rfq));
 }));
 
 // POST /api/rfqs/:rfq_id/award/:bid_id — Award contract
@@ -173,6 +234,7 @@ router.post('/:rfq_id/award/:bid_id', requireAuth, requireRole('client'), asyncH
 
   // Update winning bid
   winBid.status = 'accepted';
+  winBid.contract_id = contract.contract_id;
   await winBid.save();
 
   // Reject all other bids
@@ -184,6 +246,7 @@ router.post('/:rfq_id/award/:bid_id', requireAuth, requireRole('client'), asyncH
   // Update RFQ
   rfq.status = 'awarded';
   rfq.awarded_bid_id = winBid.bid_id;
+  rfq.contract_id = contract.contract_id;
   await rfq.save();
 
   // Notifications & email
@@ -193,13 +256,19 @@ router.post('/:rfq_id/award/:bid_id', requireAuth, requireRole('client'), asyncH
     sendContractAwarded({ vendorEmail: vendorUser.email, rfqTitle: rfq.title, clientName: req.user.name });
   }
 
-  return res.json({ rfq, contract });
+  return res.json({ rfq: serializeRFQ(rfq), contract });
 }));
 
 // GET /api/rfqs/:rfq_id/bids
 router.get('/:rfq_id/bids', requireAuth, asyncHandler(async (req, res) => {
-  const bids = await Bid.find({ rfq_id: req.params.rfq_id }).sort({ createdAt: -1 }).lean();
-  return res.json(bids);
+  const rfq = await RFQ.findOne({ rfq_id: req.params.rfq_id }).lean();
+  if (!rfq) return sendError(res, 404, 'RFQ not found');
+  if (req.user.role === 'client' && rfq.client_id !== req.user.user_id) return sendError(res, 403, 'Not your RFQ');
+
+  const query = { rfq_id: req.params.rfq_id };
+  if (req.user.role === 'vendor') query.vendor_id = req.user.user_id;
+  const bids = await Bid.find(query).sort({ createdAt: -1 }).lean();
+  return res.json(bids.map(serializeBid));
 }));
 
 // POST /api/rfqs/:rfq_id/bids — Submit bid (vendor)
@@ -225,7 +294,7 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
     return sendError(res, 400, 'Invalid quantity_mw: must be positive number');
   }
   // NEW: Validate price against ceiling
-  if (parseFloat(price_per_unit) > rfq.price_ceiling) {
+  if (hasValue(rfq.price_ceiling) && parseFloat(price_per_unit) > rfq.price_ceiling) {
     return sendError(res, 400, `Price exceeds RFQ ceiling: ₹${rfq.price_ceiling}/kWh`, { ceiling: rfq.price_ceiling, offered: price_per_unit });
   }
   // NEW: Validate quantity matches RFQ requirement (allow equal or less)
@@ -241,9 +310,11 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
     vendor_id:       req.user.user_id,
     vendor_name:     req.user.name,
     vendor_company:  vp?.company_name || req.user.name,
+    vendor_location: vp?.location || '',
     vendor_certifications:    vp?.certifications || [],
     vendor_carbon_credits:    vp?.carbon_credits_ccts || 0,
     vendor_verification_status: vp?.verification_status || 'pending',
+    vendor_verification: vp?.verification_status || 'pending',
     price_per_unit: parseFloat(price_per_unit),
     quantity_mw: parseFloat(quantity_mw),
     delivery_timeline: sanitizeString(delivery_timeline, 500),
@@ -259,11 +330,11 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
   const clientUser = await User.findOne({ user_id: rfq.client_id }).lean();
   if (clientUser) sendNewBid({ clientEmail: clientUser.email, rfqTitle: rfq.title, vendorName: req.user.name, price: bid.price_per_unit });
 
-  return res.status(201).json(bid);
+  return res.status(201).json(serializeBid(bid.toObject()));
 }));
 
 // POST /api/rfqs/:rfq_id/bids/rank — AI ranking (Scope 1.1.b)
-router.post('/:rfq_id/bids/rank', requireAuth, requireRole('client'), asyncHandler(async (req, res) => {
+async function rankRFQBids(req, res) {
   const rfq  = await RFQ.findOne({ rfq_id: req.params.rfq_id }).lean();
   if (!rfq) return sendError(res, 404, 'RFQ not found');
   if (rfq.client_id !== req.user.user_id && req.user.role !== 'admin') {
@@ -298,24 +369,33 @@ router.post('/:rfq_id/bids/rank', requireAuth, requireRole('client'), asyncHandl
   }
 
   return res.json(aiResult);
-}));
+}
+
+router.post('/:rfq_id/bids/rank', requireAuth, requireRole('client'), asyncHandler(rankRFQBids));
+router.post('/:rfq_id/bids/ai-rank', requireAuth, requireRole('client'), asyncHandler(rankRFQBids));
 
 // PATCH /api/bids/:bid_id/shortlist — Toggle shortlist
-router.patch('/bids/:bid_id/shortlist', requireAuth, requireRole('client'), asyncHandler(async (req, res) => {
+async function toggleShortlist(req, res) {
   const bid = await Bid.findOne({ bid_id: req.params.bid_id });
   if (!bid) return sendError(res, 404, 'Bid not found');
+  const rfq = await RFQ.findOne({ rfq_id: bid.rfq_id }).lean();
+  if (!rfq) return sendError(res, 404, 'RFQ not found');
+  if (rfq.client_id !== req.user.user_id && req.user.role !== 'admin') return sendError(res, 403, 'Not your RFQ');
+  if (req.params.rfq_id && req.params.rfq_id !== bid.rfq_id) return sendError(res, 404, 'Bid not found for RFQ');
 
   bid.is_shortlisted = !bid.is_shortlisted;
   bid.status = bid.is_shortlisted ? 'shortlisted' : 'submitted';
   await bid.save();
 
   if (bid.is_shortlisted) {
-    const rfq = await RFQ.findOne({ rfq_id: bid.rfq_id }).lean();
     await notify(bid.vendor_id, 'bid_shortlisted', `Your bid on "${rfq?.title}" has been shortlisted!`, bid.rfq_id);
   }
 
   return res.json(bid);
-}));
+}
+
+router.patch('/bids/:bid_id/shortlist', requireAuth, requireRole('client'), asyncHandler(toggleShortlist));
+router.patch('/:rfq_id/bids/:bid_id/shortlist', requireAuth, requireRole('client'), asyncHandler(toggleShortlist));
 
 // GET /api/rfqs/:rfq_id/bids/comparison — Vendor comparison (all bids side-by-side)
 router.get('/:rfq_id/bids/comparison', requireAuth, requireRole('client'), asyncHandler(async (req, res) => {
@@ -326,7 +406,7 @@ router.get('/:rfq_id/bids/comparison', requireAuth, requireRole('client'), async
 
   const bids = await Bid.find({ rfq_id: req.params.rfq_id }).sort({ price_per_unit: 1 }).lean();
 
-  if (!bids.length) return res.json({ rfq, bids: [], summary: null });
+  if (!bids.length) return res.json({ rfq: serializeRFQ(rfq), bids: [], summary: null });
 
   // Build comparison data
   const comparison = bids.map(b => ({
@@ -339,6 +419,13 @@ router.get('/:rfq_id/bids/comparison', requireAuth, requireRole('client'), async
     notes: b.notes,
     ai_score: b.ai_score || null,
     ai_analysis: b.ai_analysis || null,
+    compliance_score: b.compliance_score || null,
+    distance_feasibility: b.distance_feasibility || null,
+    vendor_reliability: b.vendor_reliability || null,
+    vendor_location: b.vendor_location || '',
+    vendor_certifications: b.vendor_certifications || [],
+    vendor_carbon_credits: b.vendor_carbon_credits || 0,
+    vendor_verification: b.vendor_verification || b.vendor_verification_status,
     status: b.status,
     is_shortlisted: b.is_shortlisted,
     createdAt: b.createdAt,
@@ -355,7 +442,7 @@ router.get('/:rfq_id/bids/comparison', requireAuth, requireRole('client'), async
     rfq_price_ceiling: rfq.price_ceiling,
   };
 
-  return res.json({ rfq, comparison, summary });
+  return res.json({ rfq: serializeRFQ(rfq), comparison, summary });
 }));
 
 module.exports = router;

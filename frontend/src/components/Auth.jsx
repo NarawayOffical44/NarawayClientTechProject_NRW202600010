@@ -28,9 +28,7 @@ export default function Auth() {
     setLoading(true); setError('');
     try {
       const res = await axios.post(`${API}/auth/login`, { email: form.email, password: form.password }, { withCredentials: true });
-      console.log(res)
       setUser(res.data);
-      console.log(res)
       const role = res.data.role;
       navigate(role === 'admin' ? '/admin' : `/${role}/dashboard`);
     } catch (err) {
