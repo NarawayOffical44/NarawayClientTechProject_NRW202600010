@@ -100,7 +100,7 @@ app.use((err, req, res, next) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
 (async () => {
   await connectDB();
