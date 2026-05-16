@@ -41,13 +41,27 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    const loadMarket = () => {
+      axios.get(`${API}/market/insights`, { withCredentials: true })
+        .then(res => { if (mounted) setMarketData(res.data); })
+        .catch(console.error);
+    };
+
     Promise.all([
       axios.get(`${API}/rfqs`, { withCredentials: true }),
       axios.get(`${API}/market/insights`, { withCredentials: true }),
     ]).then(([rfqRes, mktRes]) => {
+      if (!mounted) return;
       setRfqs(rfqRes.data);
       setMarketData(mktRes.data);
     }).catch(console.error).finally(() => setLoading(false));
+
+    const marketTimer = setInterval(loadMarket, 20000);
+    return () => {
+      mounted = false;
+      clearInterval(marketTimer);
+    };
   }, []);
 
   const stats = {
@@ -101,7 +115,9 @@ export default function ClientDashboard() {
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 size={14} strokeWidth={1.5} className="text-sky-400" />
                 <h3 className="text-sm font-semibold text-white">Energy Price Trends (6M)</h3>
-                <span className="ml-auto text-xs text-slate-600">₹/kWh</span>
+                <span className="ml-auto text-xs text-slate-600">
+                  Live Demo · {marketData.generated_at ? new Date(marketData.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '₹/kWh'}
+                </span>
               </div>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={marketData.price_history} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>

@@ -59,7 +59,15 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll();
+    const marketTimer = setInterval(() => {
+      axios.get(`${API}/market/insights`, { withCredentials: true })
+        .then(res => setMarketData(res.data))
+        .catch(console.error);
+    }, 20000);
+    return () => clearInterval(marketTimer);
+  }, []);
 
   const updateUser = async (userId, data) => {
     try {
@@ -189,6 +197,9 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-2 mb-4">
                         <Globe size={14} className="text-sky-400" />
                         <h3 className="text-sm font-semibold text-white">Energy Price Index (6M)</h3>
+                        <span className="ml-auto text-xs text-slate-600">
+                          Live Demo · {marketData.generated_at ? new Date(marketData.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Market'}
+                        </span>
                       </div>
                       <ResponsiveContainer width="100%" height={160}>
                         <LineChart data={marketData.price_history} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -205,6 +216,9 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-2 mb-4">
                         <Leaf size={14} className="text-emerald-400" />
                         <h3 className="text-sm font-semibold text-white">Carbon Market (CCTS)</h3>
+                        <span className="ml-auto text-xs text-slate-600">
+                          Live Demo · {marketData.generated_at ? new Date(marketData.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'CCTS'}
+                        </span>
                       </div>
                       <ResponsiveContainer width="100%" height={160}>
                         <LineChart data={marketData.price_history} margin={{ top: 0, right: 0, left: -10, bottom: 0 }}>
