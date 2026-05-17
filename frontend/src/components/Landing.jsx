@@ -213,7 +213,7 @@ export default function Landing() {
             />
           </div>
           <div className="hidden md:flex items-center gap-6">
-            {[['Platform', '#features'], ['How It Works', '#how'], ['Carbon & CCTS', '#carbon'], ['For Vendors', '#vendors'], ['Insights', '#news']].map(([l, h]) => (
+            {[['Marketplace', '/marketplace'], ['Platform', '#features'], ['How It Works', '#how'], ['Carbon & CCTS', '#carbon'], ['For Vendors', '#vendors'], ['Insights', '#news']].map(([l, h]) => (
               <a key={l} href={h} className="text-xs text-slate-400 hover:text-white transition-colors font-medium tracking-wide">{l}</a>
             ))}
           </div>
@@ -229,7 +229,7 @@ export default function Landing() {
         </div>
         {menuOpen && (
           <div className="md:hidden bg-[#0F172A] border-t border-[#1E293B] px-6 py-4 flex flex-col gap-3">
-            {[['Platform', '#features'], ['How It Works', '#how'], ['Carbon & CCTS', '#carbon'], ['For Vendors', '#vendors']].map(([l, h]) => (
+            {[['Marketplace', '/marketplace'], ['Platform', '#features'], ['How It Works', '#how'], ['Carbon & CCTS', '#carbon'], ['For Vendors', '#vendors']].map(([l, h]) => (
               <a key={l} href={h} className="text-sm text-slate-300" onClick={() => setMenuOpen(false)}>{l}</a>
             ))}
             <button onClick={go} className="text-sm bg-sky-500 text-white px-4 py-2.5 rounded-sm font-semibold text-left mt-1">Launch Platform</button>
@@ -262,6 +262,9 @@ export default function Landing() {
                 </button>
                 <button data-testid="hero-vendor-btn" onClick={() => navigate('/auth')} className="flex items-center justify-center gap-2 border border-[#1E293B] hover:border-[#334155] text-slate-300 hover:text-white px-7 py-3.5 rounded-sm font-semibold text-sm transition-all">
                   Join as Vendor
+                </button>
+                <button onClick={() => navigate('/marketplace')} className="flex items-center justify-center gap-2 border border-[#1E293B] hover:border-[#334155] text-slate-300 hover:text-white px-7 py-3.5 rounded-sm font-semibold text-sm transition-all">
+                  Browse Marketplace
                 </button>
               </div>
               <div className="flex items-center gap-6 pt-6 border-t border-[#1E293B]">
@@ -562,6 +565,9 @@ export default function Landing() {
               <button data-testid="cta-contact-btn" onClick={() => document.getElementById('contact')?.scrollIntoView()} className="border border-[#1E293B] hover:border-[#334155] text-slate-300 hover:text-white px-8 py-3.5 rounded-sm font-semibold text-sm transition-all">
                 Schedule a Demo
               </button>
+              <button onClick={() => navigate('/marketplace')} className="border border-[#1E293B] hover:border-[#334155] text-slate-300 hover:text-white px-8 py-3.5 rounded-sm font-semibold text-sm transition-all">
+                Browse Open RFQs
+              </button>
             </div>
           </div>
         </div>
@@ -621,7 +627,8 @@ export default function Landing() {
             <div>
               <div className="text-xs text-slate-500 font-semibold uppercase tracking-wide mb-3">Platform</div>
               <div className="space-y-2">
-                {['Energy Marketplace', 'AI Bid Ranking', 'Carbon Credits', 'Vendor Verification', 'Compliance Tools'].map(l => (
+                <button onClick={() => navigate('/marketplace')} className="block text-xs text-slate-600 hover:text-slate-400 cursor-pointer transition-colors text-left">Energy Marketplace</button>
+                {['AI Bid Ranking', 'Carbon Credits', 'Vendor Verification', 'Compliance Tools'].map(l => (
                   <div key={l} className="text-xs text-slate-600 hover:text-slate-400 cursor-pointer transition-colors">{l}</div>
                 ))}
               </div>
