@@ -37,6 +37,25 @@ function parseOptionalNumber(value) {
   return hasValue(value) ? parseFloat(value) : null;
 }
 
+const RFQ_STATUSES = ['draft', 'open', 'bidding_closed', 'awarded', 'completed', 'cancelled'];
+const RFQ_STATUS_TRANSITIONS = {
+  draft: ['open', 'cancelled'],
+  open: ['bidding_closed', 'cancelled'],
+  bidding_closed: ['open', 'awarded', 'cancelled'],
+  awarded: ['completed', 'bidding_closed'],
+  completed: [],
+  cancelled: [],
+};
+
+function validateRFQStatusChange(currentStatus, nextStatus) {
+  if (!RFQ_STATUSES.includes(nextStatus)) return `Invalid RFQ status: ${nextStatus}`;
+  if (currentStatus === nextStatus) return null;
+  if (!RFQ_STATUS_TRANSITIONS[currentStatus]?.includes(nextStatus)) {
+    return `Cannot change RFQ status from ${currentStatus} to ${nextStatus}`;
+  }
+  return null;
+}
+
 function normalizeRFQInput(body = {}) {
   const specs = body.specs || {};
   const financialTerms = body.financial_terms || {};
@@ -67,6 +86,77 @@ function serializeBid(bid) {
   };
 }
 
+function getState(location = '') {
+  const parts = String(location).split(',').map(p => p.trim()).filter(Boolean);
+  return (parts[parts.length - 1] || '').toLowerCase();
+}
+
+function scoreRFQForVendor(rfq, profile) {
+  if (!profile) {
+    return {
+      match_score: 50,
+      match_reasons: ['Complete vendor profile', 'Open marketplace RFQ'],
+    };
+  }
+
+  const reasons = [];
+  let score = 35;
+  const energyTypes = profile.energy_types || [];
+  if (energyTypes.includes(rfq.energy_type)) {
+    score += 35;
+    reasons.push('Energy type match');
+  } else if (energyTypes.length) {
+    reasons.push('Adjacent energy opportunity');
+  }
+
+  const capacity = parseFloat(profile.capacity_mw || 0);
+  const quantity = parseFloat(rfq.quantity_mw || 0);
+  if (capacity && quantity && capacity >= quantity) {
+    score += 15;
+    reasons.push('Capacity fit');
+  } else if (capacity) {
+    score += 6;
+    reasons.push('Partial capacity fit');
+  }
+
+  if (getState(profile.location) && getState(profile.location) === getState(rfq.delivery_location)) {
+    score += 10;
+    reasons.push('Regional delivery fit');
+  }
+
+  if (profile.verification_status === 'verified') {
+    score += 5;
+    reasons.push('Verified supplier');
+  } else {
+    reasons.push('Verification pending');
+  }
+
+  return {
+    match_score: Math.min(100, score),
+    match_reasons: reasons.slice(0, 3),
+  };
+}
+
+function enrichRFQsForVendor(rfqs, profile) {
+  return rfqs
+    .map(rfq => ({ ...rfq, ...scoreRFQForVendor(rfq, profile) }))
+    .sort((a, b) => (b.match_score || 0) - (a.match_score || 0) || new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+async function canViewRFQ(req, rfq) {
+  if (req.user.role === 'admin') return true;
+  if (req.user.role === 'client') return rfq.client_id === req.user.user_id;
+  if (req.user.role === 'vendor') {
+    if (rfq.status === 'open') return true;
+    const [bid, contract] = await Promise.all([
+      Bid.exists({ rfq_id: rfq.rfq_id, vendor_id: req.user.user_id }),
+      Contract.exists({ rfq_id: rfq.rfq_id, vendor_id: req.user.user_id }),
+    ]);
+    return !!bid || !!contract;
+  }
+  return false;
+}
+
 // ── Helper: create a notification in the DB ────────────────────────────────
 async function notify(userId, type, message, relatedId = null) {
   try {
@@ -88,7 +178,11 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
   if (req.query.status && req.user.role !== 'vendor') query.status = req.query.status;
   if (req.query.energy_type) query.energy_type = req.query.energy_type;
 
-  const rfqs = await RFQ.find(query).sort({ createdAt: -1 }).lean();
+  let rfqs = await RFQ.find(query).sort({ createdAt: -1 }).lean();
+  if (req.user.role === 'vendor') {
+    const profile = await VendorProfile.findOne({ user_id: req.user.user_id }).lean();
+    rfqs = enrichRFQsForVendor(rfqs, profile);
+  }
   return res.json(serializeRFQs(rfqs));
 }));
 
@@ -142,6 +236,7 @@ router.post('/', requireAuth, requireRole('client'), asyncHandler(async (req, re
 router.get('/:rfq_id', requireAuth, asyncHandler(async (req, res) => {
   const rfq = await RFQ.findOne({ rfq_id: req.params.rfq_id }).lean();
   if (!rfq) return sendError(res, 404, 'RFQ not found');
+  if (!(await canViewRFQ(req, rfq))) return sendError(res, 403, 'Access denied');
   return res.json(serializeRFQ(rfq));
 }));
 
@@ -151,6 +246,8 @@ router.patch('/:rfq_id/status', requireAuth, asyncHandler(async (req, res) => {
   if (rfq.client_id !== req.user.user_id && req.user.role !== 'admin')
     return sendError(res, 403, 'Not your RFQ');
   if (!req.body.status) return sendError(res, 400, 'status is required');
+  const statusError = validateRFQStatusChange(rfq.status, req.body.status);
+  if (statusError) return sendError(res, 400, statusError);
 
   rfq.status = req.body.status;
   await rfq.save();
@@ -163,6 +260,10 @@ router.patch('/:rfq_id', requireAuth, asyncHandler(async (req, res) => {
   if (!rfq) return sendError(res, 404, 'RFQ not found');
   if (rfq.client_id !== req.user.user_id && req.user.role !== 'admin')
     return sendError(res, 403, 'Not your RFQ');
+  if (req.body.status !== undefined) {
+    const statusError = validateRFQStatusChange(rfq.status, req.body.status);
+    if (statusError) return sendError(res, 400, statusError);
+  }
 
   const allowed = ['title', 'description', 'status', 'delivery_location', 'price_ceiling'];
   allowed.forEach(f => { if (req.body[f] !== undefined) rfq[f] = req.body[f]; });
@@ -303,6 +404,10 @@ router.post('/:rfq_id/bids', requireAuth, requireRole('vendor'), asyncHandler(as
   }
 
   const vp = await VendorProfile.findOne({ user_id: req.user.user_id }).lean();
+  if (!vp) return sendError(res, 403, 'Complete vendor profile before bidding');
+  if (vp.verification_status !== 'verified') {
+    return sendError(res, 403, 'Vendor verification is required before bidding');
+  }
 
   const bid = await Bid.create({
     bid_id:          generateId('bid_'),

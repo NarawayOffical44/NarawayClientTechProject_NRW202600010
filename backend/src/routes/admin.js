@@ -28,18 +28,40 @@ router.use(requireAuth, requireRole('admin'));
 
 // GET /api/admin/analytics
 router.get('/analytics', asyncHandler(async (req, res) => {
-  const [totalUsers, totalClients, totalVendors, openRfqs, awardedRfqs, totalRfqs, totalBids, pendingVendors, verifiedVendors] = await Promise.all([
+  const [
+    totalUsers, totalClients, totalVendors, openRfqs, awardedRfqs, completedRfqs,
+    totalRfqs, totalBids, pendingVendors, verifiedVendors, activeContracts, contractValue,
+  ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: 'client' }),
     User.countDocuments({ role: 'vendor' }),
     RFQ.countDocuments({ status: 'open' }),
     RFQ.countDocuments({ status: 'awarded' }),
+    RFQ.countDocuments({ status: 'completed' }),
     RFQ.countDocuments(),
     Bid.countDocuments(),
     VendorProfile.countDocuments({ verification_status: 'pending' }),
     VendorProfile.countDocuments({ verification_status: 'verified' }),
+    Contract.countDocuments({ status: 'active' }),
+    Contract.aggregate([
+      { $match: { status: { $in: ['active', 'completed'] } } },
+      { $group: { _id: null, total: { $sum: '$estimated_annual_value_inr' } } },
+    ]),
   ]);
-  return res.json({ total_users: totalUsers, total_clients: totalClients, total_vendors: totalVendors, open_rfqs: openRfqs, awarded_rfqs: awardedRfqs, total_rfqs: totalRfqs, total_bids: totalBids, pending_vendors: pendingVendors, verified_vendors: verifiedVendors });
+  return res.json({
+    total_users: totalUsers,
+    total_clients: totalClients,
+    total_vendors: totalVendors,
+    open_rfqs: openRfqs,
+    awarded_rfqs: awardedRfqs,
+    completed_rfqs: completedRfqs,
+    total_rfqs: totalRfqs,
+    total_bids: totalBids,
+    pending_vendors: pendingVendors,
+    verified_vendors: verifiedVendors,
+    active_contracts: activeContracts,
+    estimated_contract_value_inr: contractValue[0]?.total || 0,
+  });
 }));
 
 // GET /api/admin/users

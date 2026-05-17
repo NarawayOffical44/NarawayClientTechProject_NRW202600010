@@ -9,6 +9,7 @@ const express   = require('express');
 const router    = express.Router();
 const Contract  = require('../models/Contract');
 const Bid       = require('../models/Bid');
+const RFQ       = require('../models/RFQ');
 const User      = require('../models/User');
 const Notification = require('../models/Notification');
 const { requireAuth } = require('../middleware/auth');
@@ -64,6 +65,17 @@ async function respondToContract(req, res) {
     { bid_id: contract.bid_id },
     { $set: { status: action === 'accept' ? 'contract_signed' : 'contract_declined', contract_id: contract.contract_id } }
   );
+
+  if (action === 'decline') {
+    await RFQ.updateOne(
+      { rfq_id: contract.rfq_id },
+      { $set: { status: 'bidding_closed' }, $unset: { awarded_bid_id: '', contract_id: '' } }
+    );
+    await Bid.updateMany(
+      { rfq_id: contract.rfq_id, bid_id: { $ne: contract.bid_id }, status: 'rejected', contract_id: { $exists: false } },
+      { $set: { status: 'submitted' } }
+    );
+  }
 
   // Notify client
   const msg = action === 'accept'

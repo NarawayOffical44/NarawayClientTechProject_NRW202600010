@@ -109,6 +109,12 @@ export default function AdminDashboard() {
     { name: 'Total Bids', count: analytics.total_bids },
   ] : [];
 
+  const formatInr = (value = 0) => {
+    if (value >= 10000000) return `Rs.${(value / 10000000).toFixed(1)}Cr`;
+    if (value >= 100000) return `Rs.${(value / 100000).toFixed(1)}L`;
+    return `Rs.${Math.round(value).toLocaleString('en-IN')}`;
+  };
+
   const ROLE_STYLES = {
     client: 'bg-sky-500/10 text-sky-400',
     vendor: 'bg-emerald-500/10 text-emerald-400',
@@ -158,16 +164,18 @@ export default function AdminDashboard() {
             {tab === 'Overview' && analytics && (
               <div className="space-y-6">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                   {[
                     { label: 'Total Users', value: analytics.total_users, icon: <Users size={18} strokeWidth={1.5} />, color: 'text-sky-400' },
                     { label: 'Open RFQs', value: analytics.open_rfqs, icon: <FileText size={18} strokeWidth={1.5} />, color: 'text-emerald-400' },
                     { label: 'Total Bids', value: analytics.total_bids, icon: <TrendingUp size={18} strokeWidth={1.5} />, color: 'text-amber-400' },
                     { label: 'Pending Verify', value: analytics.pending_vendors, icon: <Clock size={18} strokeWidth={1.5} />, color: 'text-red-400' },
+                    { label: 'Active Contracts', value: analytics.active_contracts || 0, icon: <Shield size={18} strokeWidth={1.5} />, color: 'text-emerald-400' },
+                    { label: 'Contract Value', value: formatInr(analytics.estimated_contract_value_inr || 0), icon: <BarChart3 size={18} strokeWidth={1.5} />, color: 'text-sky-400' },
                   ].map(s => (
                     <div key={s.label} data-testid={`admin-stat-${s.label.toLowerCase().replace(' ', '-')}`} className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
                       <div className={`${s.color} mb-2`}>{s.icon}</div>
-                      <div className={`font-['Chivo'] font-black text-3xl ${s.color} mb-1`}>{s.value}</div>
+                      <div className={`font-['Chivo'] font-black text-2xl md:text-3xl ${s.color} mb-1 truncate`}>{s.value}</div>
                       <div className="text-xs text-slate-500 font-medium">{s.label}</div>
                     </div>
                   ))}
@@ -247,6 +255,7 @@ export default function AdminDashboard() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm"><span className="text-slate-400">Open</span><span className="text-emerald-400 font-semibold">{analytics.open_rfqs}</span></div>
                       <div className="flex justify-between text-sm"><span className="text-slate-400">Awarded</span><span className="text-amber-400 font-semibold">{analytics.awarded_rfqs}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-400">Completed</span><span className="text-sky-400 font-semibold">{analytics.completed_rfqs || 0}</span></div>
                       <div className="flex justify-between text-sm"><span className="text-slate-400">Total RFQs</span><span className="text-white font-semibold">{analytics.total_rfqs}</span></div>
                     </div>
                   </div>
