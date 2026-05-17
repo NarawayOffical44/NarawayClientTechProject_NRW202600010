@@ -29,6 +29,16 @@ function serializeContract(contract) {
   };
 }
 
+function contractImpact(contract) {
+  const annualMwh = Math.round((contract.quantity_mw || 0) * 8760);
+  const isRenewable = !['thermal'].includes(contract.energy_type);
+  return {
+    annual_mwh: annualMwh,
+    renewable_mw: isRenewable ? contract.quantity_mw || 0 : 0,
+    estimated_co2_avoided_tco2e: isRenewable ? Math.round(annualMwh * 0.82) : 0,
+  };
+}
+
 // GET /api/contracts
 router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const query = req.user.role === 'client'
@@ -105,12 +115,15 @@ router.post('/:contract_id/support-interest', requireAuth, asyncHandler(async (r
   if (!['financing', 'insurance', 'financing_insurance', 'carbon_credits'].includes(type)) {
     return sendError(res, 400, 'Invalid support type');
   }
+  if (contract.status !== 'active') return sendError(res, 400, 'Support can be requested after contract activation');
 
   contract.support_interest.push({
     requester_id: req.user.user_id,
     requester_role: req.user.role,
     type,
     notes: sanitizeString(req.body.notes, 500),
+    purpose: sanitizeString(req.body.purpose, 255),
+    carbon_credits_tco2e: req.body.carbon_credits_tco2e ? parseFloat(req.body.carbon_credits_tco2e) : undefined,
   });
   await contract.save();
 
@@ -125,6 +138,39 @@ router.post('/:contract_id/support-interest', requireAuth, asyncHandler(async (r
   }
 
   return res.json(serializeContract(contract));
+}));
+
+router.get('/:contract_id/esg-summary', requireAuth, asyncHandler(async (req, res) => {
+  const contract = await Contract.findOne({ contract_id: req.params.contract_id }).lean();
+  if (!contract) return sendError(res, 404, 'Contract not found');
+  if (contract.client_id !== req.user.user_id && contract.vendor_id !== req.user.user_id && req.user.role !== 'admin') {
+    return sendError(res, 403, 'Access denied');
+  }
+
+  const impact = contractImpact(contract);
+  return res.json({
+    generated_at: new Date().toISOString(),
+    contract: {
+      contract_id: contract.contract_id,
+      rfq_id: contract.rfq_id,
+      rfq_title: contract.rfq_title,
+      status: contract.status,
+      client_company: contract.client_company,
+      vendor_company: contract.vendor_company,
+      energy_type: contract.energy_type,
+      quantity_mw: contract.quantity_mw,
+      price_per_unit: contract.price_per_unit,
+      delivery_location: contract.delivery_location,
+      estimated_annual_value_inr: contract.estimated_annual_value_inr,
+    },
+    impact,
+    support_requests: contract.support_interest || [],
+    compliance_notes: [
+      'Vendor profile and documents are governed through platform verification.',
+      'Carbon credit requests are tracked against the active contract support workflow.',
+      'Estimated CO2 avoidance uses a grid-emission proxy and should be finalized during audit.',
+    ],
+  });
 }));
 
 module.exports = router;

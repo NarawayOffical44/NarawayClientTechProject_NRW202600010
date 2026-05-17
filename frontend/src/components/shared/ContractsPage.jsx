@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FileSignature, ArrowLeft, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, ExternalLink, Banknote, ShieldCheck, Leaf } from 'lucide-react';
+import { FileSignature, ArrowLeft, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, ExternalLink, Banknote, ShieldCheck, Leaf, Download } from 'lucide-react';
 import Navbar from '../Navbar';
 import { API, useAuth } from '../../App';
 
@@ -16,6 +16,7 @@ function ContractCard({ contract, role, onNavigate }) {
   const [expanded, setExpanded] = useState(false);
   const [supportLoading, setSupportLoading] = useState('');
   const [supportMessage, setSupportMessage] = useState('');
+  const [supportForm, setSupportForm] = useState({ carbon_credits_tco2e: '', purpose: '' });
   const status = CONTRACT_STATUS[contract.status] || CONTRACT_STATUS.active;
   const otherParty = role === 'client' ? contract.vendor_company : contract.client_company;
   const otherLabel = role === 'client' ? 'Vendor' : 'Client';
@@ -24,13 +25,28 @@ function ContractCard({ contract, role, onNavigate }) {
     setSupportLoading(type);
     setSupportMessage('');
     try {
-      await axios.post(`${API}/contracts/${contract.contract_id}/support-interest`, { type }, { withCredentials: true });
+      await axios.post(`${API}/contracts/${contract.contract_id}/support-interest`, {
+        type,
+        purpose: supportForm.purpose,
+        carbon_credits_tco2e: type === 'carbon_credits' ? supportForm.carbon_credits_tco2e : undefined,
+      }, { withCredentials: true });
       setSupportMessage('Interest recorded. Renergizr support will follow up.');
     } catch (err) {
       setSupportMessage(err.response?.data?.detail || 'Unable to record interest');
     } finally {
       setSupportLoading('');
     }
+  };
+
+  const downloadEsgSummary = async () => {
+    const res = await axios.get(`${API}/contracts/${contract.contract_id}/esg-summary`, { withCredentials: true });
+    const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${contract.contract_id}-esg-summary.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -127,6 +143,21 @@ function ContractCard({ contract, role, onNavigate }) {
               <p className="text-slate-400 text-xs leading-relaxed mb-3">
                 Request support for working capital, payment-cycle financing, performance cover, delivery risk insurance, or carbon credit procurement linked to this contract.
               </p>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <input
+                  type="number"
+                  value={supportForm.carbon_credits_tco2e}
+                  onChange={e => setSupportForm(p => ({ ...p, carbon_credits_tco2e: e.target.value }))}
+                  placeholder="Carbon tCO2e"
+                  className="bg-[#020617] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-3 py-2 rounded-sm text-xs outline-none"
+                />
+                <input
+                  value={supportForm.purpose}
+                  onChange={e => setSupportForm(p => ({ ...p, purpose: e.target.value }))}
+                  placeholder="Purpose / note"
+                  className="bg-[#020617] border border-[#1E293B] focus:border-sky-500 text-white placeholder-slate-600 px-3 py-2 rounded-sm text-xs outline-none"
+                />
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => requestSupport('financing')}
@@ -165,6 +196,12 @@ function ContractCard({ contract, role, onNavigate }) {
             className="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 transition-colors"
           >
             <ExternalLink size={11} /> View RFQ
+          </button>
+          <button
+            onClick={downloadEsgSummary}
+            className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            <Download size={11} /> ESG Summary
           </button>
         </div>
       )}

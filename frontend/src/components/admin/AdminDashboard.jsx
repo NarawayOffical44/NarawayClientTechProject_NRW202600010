@@ -14,14 +14,14 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Users, FileText, TrendingUp, Shield, CheckCircle, XCircle, Clock, BarChart3, Leaf, Globe, Radio } from 'lucide-react';
+import { Users, FileText, TrendingUp, Shield, CheckCircle, XCircle, Clock, BarChart3, Leaf, Globe, Banknote } from 'lucide-react';
 import Navbar from '../Navbar';
 import { API } from '../../App';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import GridMonitor from './GridMonitor';  // MOU Scope 1.1.f — 5G/6G grid balancing
 
 // Tab labels — Grid is the scope 1.1.f addition
-const TABS = ['Overview', 'Users', 'Vendors', 'RFQs', 'Grid', 'Settings'];
+const TABS = ['Overview', 'Users', 'Vendors', 'RFQs', 'Support', 'Grid', 'Settings'];
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('Overview');
@@ -29,6 +29,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [rfqs, setRfqs] = useState([]);
+  const [supportRequests, setSupportRequests] = useState([]);
   const [marketData, setMarketData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,17 +40,19 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [aRes, uRes, vRes, rRes, mRes] = await Promise.all([
+      const [aRes, uRes, vRes, rRes, sRes, mRes] = await Promise.all([
         axios.get(`${API}/admin/analytics`, { withCredentials: true }),
         axios.get(`${API}/admin/users`, { withCredentials: true }),
         axios.get(`${API}/admin/vendors`, { withCredentials: true }),
         axios.get(`${API}/admin/rfqs`, { withCredentials: true }),
+        axios.get(`${API}/admin/support-requests`, { withCredentials: true }),
         axios.get(`${API}/market/insights`, { withCredentials: true }),
       ]);
       setAnalytics(aRes.data);
       setUsers(uRes.data);
       setVendors(vRes.data);
       setRfqs(rRes.data);
+      setSupportRequests(sRes.data);
       setMarketData(mRes.data);
     } catch (err) {
       console.error(err);
@@ -72,6 +75,15 @@ export default function AdminDashboard() {
   const updateUser = async (userId, data) => {
     try {
       await axios.patch(`${API}/admin/users/${userId}`, data, { withCredentials: true });
+      fetchAll();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateDocument = async (docId, status) => {
+    try {
+      await axios.patch(`${API}/admin/vendor-documents/${docId}`, { status }, { withCredentials: true });
       fetchAll();
     } catch (err) {
       console.error(err);
@@ -113,6 +125,12 @@ export default function AdminDashboard() {
     if (value >= 10000000) return `Rs.${(value / 10000000).toFixed(1)}Cr`;
     if (value >= 100000) return `Rs.${(value / 100000).toFixed(1)}L`;
     return `Rs.${Math.round(value).toLocaleString('en-IN')}`;
+  };
+
+  const formatMwh = (value = 0) => {
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+    return Math.round(value).toLocaleString('en-IN');
   };
 
   const ROLE_STYLES = {
@@ -241,7 +259,7 @@ export default function AdminDashboard() {
                   </div>
                 )}
                 {/* Quick breakdown */}
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-3 gap-4">
                   <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
                     <h3 className="text-sm font-semibold text-white mb-3">Vendor Verification Status</h3>
                     <div className="space-y-2">
@@ -257,6 +275,15 @@ export default function AdminDashboard() {
                       <div className="flex justify-between text-sm"><span className="text-slate-400">Awarded</span><span className="text-amber-400 font-semibold">{analytics.awarded_rfqs}</span></div>
                       <div className="flex justify-between text-sm"><span className="text-slate-400">Completed</span><span className="text-sky-400 font-semibold">{analytics.completed_rfqs || 0}</span></div>
                       <div className="flex justify-between text-sm"><span className="text-slate-400">Total RFQs</span><span className="text-white font-semibold">{analytics.total_rfqs}</span></div>
+                    </div>
+                  </div>
+                  <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
+                    <h3 className="text-sm font-semibold text-white mb-3">Green Energy Impact</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm"><span className="text-slate-400">Renewable MW</span><span className="text-emerald-400 font-semibold">{analytics.renewable_mw || 0}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-400">Annual MWh</span><span className="text-sky-400 font-semibold">{formatMwh(analytics.annual_renewable_mwh || 0)}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-400">CO2 Avoided</span><span className="text-emerald-400 font-semibold">{formatMwh(analytics.estimated_co2_avoided_tco2e || 0)} t</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-400">Support Requests</span><span className="text-white font-semibold">{analytics.support_requests || 0}</span></div>
                     </div>
                   </div>
                 </div>
@@ -335,6 +362,24 @@ export default function AdminDashboard() {
                         {v.certifications?.length > 0 && (
                           <div className="text-xs text-slate-500 mt-1">Certifications: {v.certifications.join(', ')}</div>
                         )}
+                        {v.documents?.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {v.documents.slice(0, 4).map(doc => (
+                              <div key={doc.doc_id || doc._id} className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm border ${
+                                  doc.status === 'verified'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                    : doc.status === 'rejected'
+                                    ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                }`}>
+                                <span>{doc.doc_type}: {doc.status}</span>
+                                {doc.status !== 'verified' && (
+                                  <button onClick={() => updateDocument(doc.doc_id, 'verified')} className="text-emerald-400 hover:text-emerald-300">Verify</button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2 shrink-0">
                         <button
@@ -367,6 +412,46 @@ export default function AdminDashboard() {
             )}
 
             {/* ── Settings Tab — Change Admin Credentials ── */}
+            {tab === 'Support' && (
+              <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm">
+                <div className="px-6 py-4 border-b border-[#1E293B] flex items-center gap-2">
+                  <Banknote size={15} className="text-sky-400" />
+                  <h2 className="font-['Chivo'] font-bold text-base text-white">Finance, Insurance & Carbon Requests ({supportRequests.length})</h2>
+                </div>
+                <div className="divide-y divide-[#1E293B]">
+                  {supportRequests.map(req => (
+                    <div key={req.request_id} className="px-6 py-4 flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white truncate">{req.rfq_title}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">
+                          {req.client_company} · {req.vendor_company} · {req.requester_role}
+                        </div>
+                        {(req.purpose || req.notes || req.carbon_credits_tco2e) && (
+                          <div className="text-xs text-slate-500 mt-2">
+                            {req.carbon_credits_tco2e ? `${req.carbon_credits_tco2e} tCO2e · ` : ''}{req.purpose || req.notes}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-xs px-2.5 py-1 rounded-sm font-semibold border border-sky-500/20 text-sky-400 bg-sky-500/10 capitalize">
+                          {req.type?.replace('_', ' ')}
+                        </span>
+                        <span className="text-xs px-2.5 py-1 rounded-sm font-semibold border border-amber-500/20 text-amber-400 bg-amber-500/10 capitalize">
+                          {req.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {supportRequests.length === 0 && (
+                    <div className="py-12 text-center">
+                      <Banknote size={24} strokeWidth={1} className="text-slate-700 mx-auto mb-3" />
+                      <p className="text-slate-500 text-sm">No support requests yet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {tab === 'Settings' && (
               <div className="max-w-lg">
                 <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-6">

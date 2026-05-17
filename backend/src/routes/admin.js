@@ -10,6 +10,7 @@
  */
 const express   = require('express');
 const router    = express.Router();
+const mongoose  = require('mongoose');
 const User      = require('../models/User');
 const RFQ       = require('../models/RFQ');
 const Bid       = require('../models/Bid');
@@ -31,6 +32,7 @@ router.get('/analytics', asyncHandler(async (req, res) => {
   const [
     totalUsers, totalClients, totalVendors, openRfqs, awardedRfqs, completedRfqs,
     totalRfqs, totalBids, pendingVendors, verifiedVendors, activeContracts, contractValue,
+    impactContracts, creditBalances, supportContracts,
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: 'client' }),
@@ -47,7 +49,16 @@ router.get('/analytics', asyncHandler(async (req, res) => {
       { $match: { status: { $in: ['active', 'completed'] } } },
       { $group: { _id: null, total: { $sum: '$estimated_annual_value_inr' } } },
     ]),
+    Contract.find({ status: { $in: ['active', 'completed'] } }).select('energy_type quantity_mw').lean(),
+    VendorProfile.aggregate([
+      { $group: { _id: null, total: { $sum: '$carbon_credits_ccts' } } },
+    ]),
+    Contract.find({ 'support_interest.0': { $exists: true } }).select('support_interest').lean(),
   ]);
+  const renewableContracts = impactContracts.filter(c => c.energy_type !== 'thermal');
+  const renewableMw = renewableContracts.reduce((sum, c) => sum + (c.quantity_mw || 0), 0);
+  const annualMwh = Math.round(renewableMw * 8760);
+  const supportRequests = supportContracts.reduce((sum, c) => sum + (c.support_interest?.length || 0), 0);
   return res.json({
     total_users: totalUsers,
     total_clients: totalClients,
@@ -61,6 +72,11 @@ router.get('/analytics', asyncHandler(async (req, res) => {
     verified_vendors: verifiedVendors,
     active_contracts: activeContracts,
     estimated_contract_value_inr: contractValue[0]?.total || 0,
+    renewable_mw: renewableMw,
+    annual_renewable_mwh: annualMwh,
+    estimated_co2_avoided_tco2e: Math.round(annualMwh * 0.82),
+    carbon_credits_available_tco2e: creditBalances[0]?.total || 0,
+    support_requests: supportRequests,
   });
 }));
 
@@ -147,7 +163,16 @@ router.get('/vendors', asyncHandler(async (req, res) => {
   const userIds  = profiles.map(p => p.user_id);
   const users    = await User.find({ user_id: { $in: userIds } }).select('user_id email name').lean();
   const userMap  = Object.fromEntries(users.map(u => [u.user_id, u]));
-  const result   = profiles.map(p => ({ ...p, user: userMap[p.user_id] || null }));
+  const vendorIds = profiles.map(p => p.vendor_id);
+  const docs = await mongoose.connection.collection('vendor_documents')
+    .find({ vendor_id: { $in: vendorIds } }, { projection: { data: 0 } })
+    .toArray();
+  const docsByVendor = docs.reduce((acc, doc) => {
+    acc[doc.vendor_id] = acc[doc.vendor_id] || [];
+    acc[doc.vendor_id].push(doc);
+    return acc;
+  }, {});
+  const result   = profiles.map(p => ({ ...p, user: userMap[p.user_id] || null, documents: docsByVendor[p.vendor_id] || [] }));
   return res.json(result);
 }));
 
@@ -163,6 +188,26 @@ router.get('/contracts', asyncHandler(async (req, res) => {
   return res.json(contracts);
 }));
 
+router.get('/support-requests', asyncHandler(async (req, res) => {
+  const contracts = await Contract.find({ 'support_interest.0': { $exists: true } }).sort({ updatedAt: -1 }).lean();
+  const requests = contracts.flatMap(contract => (contract.support_interest || []).map(item => ({
+    request_id: item._id,
+    contract_id: contract.contract_id,
+    rfq_title: contract.rfq_title,
+    client_company: contract.client_company,
+    vendor_company: contract.vendor_company,
+    type: item.type,
+    status: item.status || 'requested',
+    requester_role: item.requester_role,
+    notes: item.notes,
+    purpose: item.purpose,
+    carbon_credits_tco2e: item.carbon_credits_tco2e,
+    created_at: item.created_at,
+  })));
+  requests.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  return res.json(requests);
+}));
+
 // GET /api/admin/audit-logs — Retrieve audit trail
 router.get('/audit-logs', asyncHandler(async (req, res) => {
   const { action, entity_type, entity_id, days = 30, limit = 100 } = req.query;
@@ -175,6 +220,19 @@ router.get('/audit-logs', asyncHandler(async (req, res) => {
 
   const logs = await getAuditLogs(filters, parseInt(limit));
   return res.json(logs);
+}));
+
+router.patch('/vendor-documents/:doc_id', asyncHandler(async (req, res) => {
+  const { status } = req.body;
+  if (!['pending', 'verified', 'rejected'].includes(status)) return sendError(res, 400, 'Invalid document status');
+  const doc = await mongoose.connection.collection('vendor_documents').findOneAndUpdate(
+    { doc_id: req.params.doc_id },
+    { $set: { status } },
+    { returnDocument: 'after', projection: { data: 0 } }
+  );
+  const updated = doc?.value || doc;
+  if (!updated) return sendError(res, 404, 'Document not found');
+  return res.json(updated);
 }));
 
 module.exports = router;

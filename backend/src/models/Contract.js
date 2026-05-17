@@ -45,6 +45,8 @@ const contractSchema = new mongoose.Schema({
     requester_role:      { type: String, enum: ['client', 'vendor', 'admin'] },
     type:                { type: String, enum: ['financing', 'insurance', 'financing_insurance', 'carbon_credits'] },
     notes:               { type: String },
+    purpose:             { type: String },
+    carbon_credits_tco2e:{ type: Number },
     status:              { type: String, enum: ['requested', 'contacted', 'closed'], default: 'requested' },
     created_at:          { type: Date, default: Date.now },
   }],
