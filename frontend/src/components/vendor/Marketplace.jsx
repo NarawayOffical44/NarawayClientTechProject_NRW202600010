@@ -41,6 +41,7 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('All');
+  const [category, setCategory] = useState('All');
 
   useEffect(() => {
     setLoading(true);
@@ -56,13 +57,15 @@ export default function Marketplace() {
     return rfqs
       .filter(r => {
         if (filterType !== 'All' && r.energy_type !== filterType) return false;
+        if (category !== 'All' && !(r.add_on_services || []).includes(category)) return false;
         if (!q) return true;
         return (r.title || '').toLowerCase().includes(q) ||
           (r.delivery_location || '').toLowerCase().includes(q) ||
-          formatEnergy(r.energy_type).toLowerCase().includes(q);
+          formatEnergy(r.energy_type).toLowerCase().includes(q) ||
+          (r.add_on_services || []).some(s => s.toLowerCase().includes(q));
       })
       .sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
-  }, [rfqs, search, filterType]);
+  }, [rfqs, search, filterType, category]);
 
   const counts = useMemo(() => {
     const base = { All: rfqs.length };
@@ -70,6 +73,14 @@ export default function Marketplace() {
       base[t] = rfqs.filter(r => r.energy_type === t).length;
     });
     return base;
+  }, [rfqs]);
+
+  const categories = useMemo(() => {
+    const items = new Map();
+    rfqs.forEach(r => (r.add_on_services || []).forEach(s => items.set(s, (items.get(s) || 0) + 1)));
+    return Array.from(items.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8);
   }, [rfqs]);
 
   const recommendedCount = rfqs.filter(r => (r.match_score || 0) >= 70).length;
@@ -128,6 +139,42 @@ export default function Marketplace() {
                 ))}
               </div>
             </div>
+
+            {categories.length > 0 && (
+              <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Filter size={14} className="text-amber-400" />
+                  <h3 className="text-sm font-semibold text-white">Categories</h3>
+                </div>
+                <div className="space-y-1.5">
+                  <button
+                    onClick={() => setCategory('All')}
+                    className={`w-full flex items-center justify-between text-xs px-3 py-2 rounded-sm border font-medium transition-all duration-200 ${
+                      category === 'All'
+                        ? 'border-sky-500 bg-sky-500/10 text-sky-400'
+                        : 'border-[#1E293B] text-slate-400 hover:border-[#334155] hover:text-white'
+                    }`}
+                  >
+                    <span>All Categories</span>
+                    <span className="text-slate-500">{rfqs.length}</span>
+                  </button>
+                  {categories.map(([name, count]) => (
+                    <button
+                      key={name}
+                      onClick={() => setCategory(name)}
+                      className={`w-full flex items-center justify-between text-xs px-3 py-2 rounded-sm border font-medium transition-all duration-200 ${
+                        category === name
+                          ? 'border-sky-500 bg-sky-500/10 text-sky-400'
+                          : 'border-[#1E293B] text-slate-400 hover:border-[#334155] hover:text-white'
+                      }`}
+                    >
+                      <span className="truncate">{name}</span>
+                      <span className="text-slate-500">{count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
               <div className="flex items-center gap-2 mb-3">
