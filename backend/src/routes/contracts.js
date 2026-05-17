@@ -13,7 +13,7 @@ const RFQ       = require('../models/RFQ');
 const User      = require('../models/User');
 const Notification = require('../models/Notification');
 const { requireAuth } = require('../middleware/auth');
-const { generateId, asyncHandler, sendError } = require('../utils/helpers');
+const { generateId, asyncHandler, sendError, sanitizeString } = require('../utils/helpers');
 const { sendContractAccepted } = require('../utils/email');
 
 async function notify(userId, type, message, relatedId) {
@@ -93,5 +93,38 @@ async function respondToContract(req, res) {
 
 router.patch('/:contract_id/respond', requireAuth, asyncHandler(respondToContract));
 router.post('/:contract_id/respond', requireAuth, asyncHandler(respondToContract));
+
+router.post('/:contract_id/support-interest', requireAuth, asyncHandler(async (req, res) => {
+  const contract = await Contract.findOne({ contract_id: req.params.contract_id });
+  if (!contract) return sendError(res, 404, 'Contract not found');
+  if (contract.client_id !== req.user.user_id && contract.vendor_id !== req.user.user_id && req.user.role !== 'admin') {
+    return sendError(res, 403, 'Access denied');
+  }
+
+  const type = req.body.type || 'financing_insurance';
+  if (!['financing', 'insurance', 'financing_insurance', 'carbon_credits'].includes(type)) {
+    return sendError(res, 400, 'Invalid support type');
+  }
+
+  contract.support_interest.push({
+    requester_id: req.user.user_id,
+    requester_role: req.user.role,
+    type,
+    notes: sanitizeString(req.body.notes, 500),
+  });
+  await contract.save();
+
+  const admins = await User.find({ role: 'admin' }).select('user_id').lean();
+  for (const admin of admins) {
+    await notify(
+      admin.user_id,
+      'contract_support_requested',
+      `${req.user.name} requested ${type.replace('_', ' + ')} support for "${contract.rfq_title}"`,
+      contract.contract_id
+    );
+  }
+
+  return res.json(serializeContract(contract));
+}));
 
 module.exports = router;

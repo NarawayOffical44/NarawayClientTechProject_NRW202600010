@@ -143,11 +143,26 @@ function enrichRFQsForVendor(rfqs, profile) {
     .sort((a, b) => (b.match_score || 0) - (a.match_score || 0) || new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
+function serializePublicRFQ(rfq) {
+  return {
+    rfq_id: rfq.rfq_id,
+    title: rfq.title,
+    description: rfq.description,
+    client_name: rfq.client_name,
+    energy_type: rfq.energy_type,
+    quantity_mw: rfq.quantity_mw,
+    delivery_location: rfq.delivery_location,
+    price_ceiling: rfq.price_ceiling,
+    bid_count: rfq.bid_count || 0,
+    add_on_services: rfq.add_on_services || [],
+  };
+}
+
 async function canViewRFQ(req, rfq) {
   if (req.user.role === 'admin') return true;
+  if (rfq.status === 'open') return true;
   if (req.user.role === 'client') return rfq.client_id === req.user.user_id;
   if (req.user.role === 'vendor') {
-    if (rfq.status === 'open') return true;
     const [bid, contract] = await Promise.all([
       Bid.exists({ rfq_id: rfq.rfq_id, vendor_id: req.user.user_id }),
       Contract.exists({ rfq_id: rfq.rfq_id, vendor_id: req.user.user_id }),
@@ -173,9 +188,11 @@ async function notify(userId, type, message, relatedId = null) {
 // GET /api/rfqs
 router.get('/', requireAuth, asyncHandler(async (req, res) => {
   let query = {};
-  if (req.user.role === 'client') query.client_id = req.user.user_id;
+  const marketplaceView = req.query.marketplace === 'true';
+  if (marketplaceView) query.status = 'open';
+  else if (req.user.role === 'client') query.client_id = req.user.user_id;
   else if (req.user.role === 'vendor') query.status = 'open';
-  if (req.query.status && req.user.role !== 'vendor') query.status = req.query.status;
+  if (!marketplaceView && req.query.status && req.user.role !== 'vendor') query.status = req.query.status;
   if (req.query.energy_type) query.energy_type = req.query.energy_type;
 
   let rfqs = await RFQ.find(query).sort({ createdAt: -1 }).lean();
@@ -184,6 +201,14 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
     rfqs = enrichRFQsForVendor(rfqs, profile);
   }
   return res.json(serializeRFQs(rfqs));
+}));
+
+// GET /api/rfqs/public/open - public marketplace preview, summary only.
+router.get('/public/open', asyncHandler(async (req, res) => {
+  const query = { status: 'open' };
+  if (req.query.energy_type) query.energy_type = req.query.energy_type;
+  const rfqs = await RFQ.find(query).sort({ createdAt: -1 }).limit(50).lean();
+  return res.json(rfqs.map(serializePublicRFQ));
 }));
 
 // POST /api/rfqs

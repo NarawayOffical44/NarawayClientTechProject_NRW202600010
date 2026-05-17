@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FileSignature, ArrowLeft, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { FileSignature, ArrowLeft, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, ExternalLink, Banknote, ShieldCheck, Leaf } from 'lucide-react';
 import Navbar from '../Navbar';
 import { API, useAuth } from '../../App';
 
@@ -14,9 +14,24 @@ const CONTRACT_STATUS = {
 
 function ContractCard({ contract, role, onNavigate }) {
   const [expanded, setExpanded] = useState(false);
+  const [supportLoading, setSupportLoading] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
   const status = CONTRACT_STATUS[contract.status] || CONTRACT_STATUS.active;
   const otherParty = role === 'client' ? contract.vendor_company : contract.client_company;
   const otherLabel = role === 'client' ? 'Vendor' : 'Client';
+
+  const requestSupport = async (type) => {
+    setSupportLoading(type);
+    setSupportMessage('');
+    try {
+      await axios.post(`${API}/contracts/${contract.contract_id}/support-interest`, { type }, { withCredentials: true });
+      setSupportMessage('Interest recorded. Renergizr support will follow up.');
+    } catch (err) {
+      setSupportMessage(err.response?.data?.detail || 'Unable to record interest');
+    } finally {
+      setSupportLoading('');
+    }
+  };
 
   return (
     <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm overflow-hidden">
@@ -103,6 +118,39 @@ function ContractCard({ contract, role, onNavigate }) {
             <div>
               <div className="text-slate-500 mb-1 uppercase tracking-wide text-[10px]">Vendor Notes</div>
               <p className="text-slate-400 text-xs">{contract.vendor_notes}</p>
+            </div>
+          )}
+
+          {contract.status === 'active' && (
+            <div className="bg-[#1E293B]/40 border border-[#1E293B] rounded-sm p-3">
+              <div className="text-slate-500 mb-2 uppercase tracking-wide text-[10px]">Financing, Insurance & Carbon Support</div>
+              <p className="text-slate-400 text-xs leading-relaxed mb-3">
+                Request support for working capital, payment-cycle financing, performance cover, delivery risk insurance, or carbon credit procurement linked to this contract.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => requestSupport('financing')}
+                  disabled={!!supportLoading}
+                  className="flex items-center justify-center gap-1.5 border border-sky-500/20 text-sky-400 hover:bg-sky-500/10 rounded-sm py-2 text-xs font-semibold transition-colors disabled:opacity-60"
+                >
+                  <Banknote size={12} /> {supportLoading === 'financing' ? 'Saving...' : 'Finance'}
+                </button>
+                <button
+                  onClick={() => requestSupport('insurance')}
+                  disabled={!!supportLoading}
+                  className="flex items-center justify-center gap-1.5 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 rounded-sm py-2 text-xs font-semibold transition-colors disabled:opacity-60"
+                >
+                  <ShieldCheck size={12} /> {supportLoading === 'insurance' ? 'Saving...' : 'Insure'}
+                </button>
+                <button
+                  onClick={() => requestSupport('carbon_credits')}
+                  disabled={!!supportLoading}
+                  className="flex items-center justify-center gap-1.5 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 rounded-sm py-2 text-xs font-semibold transition-colors disabled:opacity-60"
+                >
+                  <Leaf size={12} /> {supportLoading === 'carbon_credits' ? 'Saving...' : 'Carbon'}
+                </button>
+              </div>
+              {supportMessage && <div className="text-xs text-slate-500 mt-2">{supportMessage}</div>}
             </div>
           )}
 

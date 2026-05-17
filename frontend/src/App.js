@@ -128,6 +128,7 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/marketplace" element={<Marketplace />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/client/dashboard" element={<ProtectedRoute role="client"><ClientDashboard /></ProtectedRoute>} />
       <Route path="/client/rfqs/new" element={<ProtectedRoute role="client"><CreateRFQ /></ProtectedRoute>} />
@@ -137,6 +138,7 @@ function AppRouter() {
       <Route path="/vendor/profile" element={<ProtectedRoute role="vendor"><VendorProfile /></ProtectedRoute>} />
       <Route path="/vendor/marketplace" element={<ProtectedRoute role="vendor"><Marketplace /></ProtectedRoute>} />
       <Route path="/vendor/rfqs/:rfq_id" element={<ProtectedRoute role="vendor"><VendorRFQView /></ProtectedRoute>} />
+      <Route path="/marketplace/rfqs/:rfq_id" element={<ProtectedRoute><VendorRFQView readOnly /></ProtectedRoute>} />
       <Route path="/vendor/contracts" element={<ProtectedRoute role="vendor"><ContractsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />

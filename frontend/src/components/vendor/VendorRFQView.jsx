@@ -5,7 +5,7 @@ import {
   ArrowLeft, Send, CheckCircle, FileSignature, Clock, Trophy, AlertTriangle, XCircle
 } from 'lucide-react';
 import Navbar from '../Navbar';
-import { API } from '../../App';
+import { API, useAuth } from '../../App';
 
 const BID_STATUS = {
   submitted: { label: 'Submitted — Under Review', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
@@ -16,9 +16,10 @@ const BID_STATUS = {
   contract_declined: { label: 'Contract Declined', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
 };
 
-export default function VendorRFQView() {
+export default function VendorRFQView({ readOnly = false }) {
   const { rfq_id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [rfq, setRfq] = useState(null);
   const [myBid, setMyBid] = useState(null);
   const [contract, setContract] = useState(null);
@@ -34,14 +35,15 @@ export default function VendorRFQView() {
 
   const fetchData = async () => {
     try {
-      const [rfqRes, bidsRes] = await Promise.all([
-        axios.get(`${API}/rfqs/${rfq_id}`, { withCredentials: true }),
-        axios.get(`${API}/rfqs/${rfq_id}/bids`, { withCredentials: true }),
-      ]);
+      const rfqRes = await axios.get(`${API}/rfqs/${rfq_id}`, { withCredentials: true });
       setRfq(rfqRes.data);
+      setForm(f => ({ ...f, quantity_mw: rfqRes.data.quantity_mw?.toString() || '' }));
+
+      if (readOnly || user?.role !== 'vendor') return;
+
+      const bidsRes = await axios.get(`${API}/rfqs/${rfq_id}/bids`, { withCredentials: true });
       const bid = bidsRes.data[0] || null;
       setMyBid(bid);
-      setForm(f => ({ ...f, quantity_mw: rfqRes.data.quantity_mw?.toString() || '' }));
 
       // Fetch contract if bid has one
       if (bid?.contract_id) {
@@ -56,7 +58,7 @@ export default function VendorRFQView() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [rfq_id]);
+  useEffect(() => { fetchData(); }, [rfq_id, readOnly, user?.role]);
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -111,7 +113,7 @@ export default function VendorRFQView() {
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 md:px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => navigate('/vendor/marketplace')} className="text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => navigate(readOnly ? '/marketplace' : '/vendor/marketplace')} className="text-slate-400 hover:text-white transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
@@ -169,8 +171,32 @@ export default function VendorRFQView() {
 
           {/* Right Panel: Bid Form or Status */}
           <div className="md:col-span-2 space-y-4">
+            {readOnly && (
+              <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-5">
+                <h2 className="font-['Chivo'] font-bold text-base text-white mb-3">Requirement Access</h2>
+                <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                  This is a marketplace preview. Verified vendors can submit bids after completing profile verification.
+                </p>
+                {user?.role === 'vendor' ? (
+                  <button
+                    onClick={() => navigate(`/vendor/rfqs/${rfq.rfq_id}`)}
+                    className="w-full bg-sky-500 hover:bg-sky-600 text-white py-2.5 rounded-sm text-sm font-semibold transition-colors"
+                  >
+                    Open Vendor Bid Page
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate('/auth')}
+                    className="w-full border border-sky-500/30 text-sky-400 hover:bg-sky-500/10 py-2.5 rounded-sm text-sm font-semibold transition-colors"
+                  >
+                    Sign in as Vendor
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Contract Panel (if contract exists) */}
-            {contract && (
+            {!readOnly && contract && (
               <div className={`rounded-sm p-5 border ${contract.status === 'active' ? 'border-emerald-500/20 bg-emerald-500/5' : contract.status === 'vendor_declined' ? 'border-red-500/20 bg-red-500/5' : 'border-amber-500/20 bg-amber-500/5'}`}>
                 <div className="flex items-center gap-2 mb-4">
                   <FileSignature size={16} strokeWidth={1.5} className={contract.status === 'active' ? 'text-emerald-400' : contract.status === 'vendor_declined' ? 'text-red-400' : 'text-amber-400'} />
@@ -262,7 +288,7 @@ export default function VendorRFQView() {
             )}
 
             {/* Bid Status Card (if bid exists but no active contract panel to show) */}
-            {myBid && !contract && (
+            {!readOnly && myBid && !contract && (
               <div className={`bg-[#0F172A] rounded-sm p-5 border ${myBid.status === 'rejected' ? 'border-red-500/20' : myBid.status === 'shortlisted' ? 'border-amber-500/20' : 'border-emerald-500/20'}`}>
                 <div className="text-center mb-4">
                   {myBid.status === 'rejected' ? (
@@ -292,7 +318,7 @@ export default function VendorRFQView() {
             )}
 
             {/* Bid Form (if no bid yet and RFQ is open) */}
-            {!myBid && rfq.status === 'open' && (
+            {!readOnly && !myBid && rfq.status === 'open' && (
               <form onSubmit={handleSubmit} className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-5">
                 <h2 className="font-['Chivo'] font-bold text-base text-white mb-5">Submit Your Bid</h2>
                 {error && (
@@ -353,7 +379,7 @@ export default function VendorRFQView() {
               </form>
             )}
 
-            {!myBid && rfq.status !== 'open' && (
+            {!readOnly && !myBid && rfq.status !== 'open' && (
               <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm py-10 text-center">
                 <AlertTriangle size={28} strokeWidth={1} className="text-slate-700 mx-auto mb-3" />
                 <p className="text-slate-500 text-sm">This RFQ is {rfq.status?.replace('_', ' ')}.</p>

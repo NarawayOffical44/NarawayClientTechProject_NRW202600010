@@ -14,7 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import Navbar from '../Navbar';
-import { API } from '../../App';
+import { API, useAuth } from '../../App';
 
 const ENERGY_TYPES = ['All', 'solar', 'wind', 'hydro', 'thermal', 'green_hydrogen'];
 
@@ -36,6 +36,7 @@ function getEnergyIcon(type) {
 
 export default function Marketplace() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [rfqs, setRfqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -43,11 +44,12 @@ export default function Marketplace() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get(`${API}/rfqs`, { withCredentials: true })
+    const endpoint = user ? `${API}/rfqs` : `${API}/rfqs/public/open`;
+    axios.get(endpoint, { withCredentials: true })
       .then(r => setRfqs(r.data))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -72,6 +74,14 @@ export default function Marketplace() {
 
   const recommendedCount = rfqs.filter(r => (r.match_score || 0) >= 70).length;
   const topMatches = rfqs.filter(r => r.match_score !== undefined).slice(0, 3);
+  const openRFQ = (rfqId) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    if (user.role === 'vendor') navigate(`/vendor/rfqs/${rfqId}`);
+    else navigate(`/marketplace/rfqs/${rfqId}`);
+  };
 
   return (
     <div className="min-h-screen bg-[#020617]">
@@ -122,7 +132,7 @@ export default function Marketplace() {
             <div className="bg-[#0F172A] border border-[#1E293B] rounded-sm p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Target size={14} className="text-emerald-400" />
-                <h3 className="text-sm font-semibold text-white">Profile Fit</h3>
+                <h3 className="text-sm font-semibold text-white">{user ? 'Profile Fit' : 'Market Preview'}</h3>
               </div>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="bg-[#1E293B]/40 rounded-sm p-3">
@@ -138,7 +148,7 @@ export default function Marketplace() {
                 {topMatches.map(r => (
                   <button
                     key={r.rfq_id}
-                    onClick={() => navigate(`/vendor/rfqs/${r.rfq_id}`)}
+                    onClick={() => openRFQ(r.rfq_id)}
                     className="w-full text-left border border-[#1E293B] hover:border-sky-500/30 rounded-sm px-3 py-2 transition-colors"
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -150,7 +160,7 @@ export default function Marketplace() {
                 ))}
                 {topMatches.length === 0 && (
                   <div className="text-xs text-slate-500 border border-[#1E293B] rounded-sm px-3 py-2">
-                    Complete your vendor profile to improve RFQ matching.
+                    {user ? 'Complete your vendor profile to improve RFQ matching.' : 'Sign in as a vendor to see profile-ranked opportunities.'}
                   </div>
                 )}
               </div>
@@ -164,7 +174,7 @@ export default function Marketplace() {
               </div>
               <div className="hidden sm:flex items-center gap-1 text-xs text-slate-500">
                 <ShieldCheck size={13} className="text-emerald-400" />
-                Profile-ranked marketplace
+                {user ? 'Profile-ranked marketplace' : 'Public RFQ preview'}
               </div>
             </div>
 
@@ -186,7 +196,7 @@ export default function Marketplace() {
                     <div
                       key={rfq.rfq_id}
                       data-testid={`marketplace-rfq-${rfq.rfq_id}`}
-                      onClick={() => navigate(`/vendor/rfqs/${rfq.rfq_id}`)}
+                      onClick={() => openRFQ(rfq.rfq_id)}
                       className="bg-[#0F172A] border border-[#1E293B] hover:border-sky-500/30 rounded-sm p-5 cursor-pointer transition-all duration-200 group"
                     >
                       <div className="flex items-start justify-between gap-4">
@@ -224,7 +234,7 @@ export default function Marketplace() {
                             <div className="text-xs text-slate-500 mt-1">Ceiling: Rs.{rfq.price_ceiling}/kWh</div>
                           )}
                           <div className="flex items-center gap-1 justify-end mt-2">
-                            <span className="text-xs text-sky-400 font-medium">Bid Now</span>
+                            <span className="text-xs text-sky-400 font-medium">{!user ? 'Sign in to View' : user.role === 'vendor' ? 'Bid Now' : 'View Details'}</span>
                             <ChevronRight size={12} className="text-sky-400" />
                           </div>
                         </div>

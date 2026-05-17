@@ -40,6 +40,14 @@ const contractSchema = new mongoose.Schema({
   // Lifecycle
   status:               { type: String, enum: ['pending_vendor_acceptance', 'active', 'vendor_declined', 'completed'], default: 'pending_vendor_acceptance' },
   vendor_notes:         { type: String },   // filled when vendor accepts/declines
+  support_interest: [{
+    requester_id:        { type: String },
+    requester_role:      { type: String, enum: ['client', 'vendor', 'admin'] },
+    type:                { type: String, enum: ['financing', 'insurance', 'financing_insurance', 'carbon_credits'] },
+    notes:               { type: String },
+    status:              { type: String, enum: ['requested', 'contacted', 'closed'], default: 'requested' },
+    created_at:          { type: Date, default: Date.now },
+  }],
 }, { timestamps: true });
 
 // Virtual: created_at alias for frontend compatibility
